@@ -20,7 +20,7 @@ import net.minecraft.util.ParticleUtils;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
@@ -194,9 +194,9 @@ public interface Rustable extends ChangeOverTimeBlock<Rustable.RustLevel> {
         return Rustable.getIncreasedRustBlock(state.getBlock()).map(block -> block.withPropertiesOf(state));
     }
 
-    int RUST_RATE = CommonConfigs.General.RUST_RATE.get();
 
-    default ItemInteractionResult use(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+    default InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+        ItemStack stack = player.getItemInHand(hand);
         var item = stack.getItem();
         var age = getAge();
 
@@ -205,12 +205,12 @@ public interface Rustable extends ChangeOverTimeBlock<Rustable.RustLevel> {
             level.playSound(player, pos, SoundEvents.AXE_SCRAPE, SoundSource.BLOCKS, 1.0f, 1.0f);
             ParticleUtils.spawnParticlesOnBlockFaces(level, pos, ParticleTypes.WAX_OFF, UniformInt.of(3, 5));
             if (player instanceof ServerPlayer serverPlayer) {
-                stack.hurtAndBreak(1, player, player.getEquipmentSlotForItem(stack));
+                stack.hurtAndBreak(1, player, p -> p.broadcastBreakEvent(hand));
                 player.awardStat(Stats.ITEM_USED.get(item));
                 CriteriaTriggers.ITEM_USED_ON_BLOCK.trigger(serverPlayer, pos, stack);
                 level.setBlockAndUpdate(pos, state.setValue(ModBlockProperties.VARNISHED, false));
             }
-            return ItemInteractionResult.sidedSuccess(level.isClientSide);
+            return InteractionResult.sidedSuccess(level.isClientSide);
         }
 
         if (item == Items.HONEYCOMB && !state.getValue(ModBlockProperties.VARNISHED)) {
@@ -225,14 +225,14 @@ public interface Rustable extends ChangeOverTimeBlock<Rustable.RustLevel> {
                     stack.shrink(1);
                 }
             }
-            return ItemInteractionResult.sidedSuccess(level.isClientSide);
+            return InteractionResult.sidedSuccess(level.isClientSide);
         }
 
         if (item == Items.WET_SPONGE && (age == RustLevel.CLEAN || age == RustLevel.WEATHERED)) {
             var rusted = this.getNext(state);
 
             if (!player.getAbilities().instabuild) {
-                if (state.getValue(ModBlockProperties.VARNISHED)) return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
+                if (state.getValue(ModBlockProperties.VARNISHED)) return InteractionResult.PASS;
             }
 
             if (rusted.isPresent()) {
@@ -245,10 +245,10 @@ public interface Rustable extends ChangeOverTimeBlock<Rustable.RustLevel> {
                 else {
                     ParticleUtil.spawnParticlesOnBlockFaces(level, pos, ParticleTypes.SPLASH, UniformInt.of(3, 5), -0.05f, 0.05f, false);
                 }
-                return ItemInteractionResult.sidedSuccess(level.isClientSide);
+                return InteractionResult.sidedSuccess(level.isClientSide);
             }
         }
-        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        return InteractionResult.PASS;
     }
 
     default float getChanceModifier() {
@@ -267,7 +267,7 @@ public interface Rustable extends ChangeOverTimeBlock<Rustable.RustLevel> {
 
     default void applyChangeOverTime(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource) {
         if (getAge() == RustLevel.WAXED || getAge() == RustLevel.RUSTED) return;
-        if (randomSource.nextInt(100) >= RUST_RATE) return;
+        if (randomSource.nextInt(100) >= CommonConfigs.General.RUST_RATE.get()) return;
         int airCheck = 0;
         int wetness = 0;
         for (Direction dir : Direction.values()) {

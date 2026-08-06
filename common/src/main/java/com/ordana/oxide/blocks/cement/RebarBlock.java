@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 
 public class RebarBlock extends Block implements SimpleWaterloggedBlock {
-    public static final MapCodec<WallBlock> CODEC = simpleCodec(WallBlock::new);
+//    public static final MapCodec<WallBlock> CODEC = simpleCodec(WallBlock::new);
 
     public static final BooleanProperty UP;
     public static final BooleanProperty DOWN;
@@ -47,9 +47,11 @@ public class RebarBlock extends Block implements SimpleWaterloggedBlock {
     protected static final VoxelShape BIG_SHAPE;
 
 
+/*
     public @NotNull MapCodec<WallBlock> codec() {
         return CODEC;
     }
+*/
 
     public RebarBlock(BlockBehaviour.Properties properties) {
         super(properties);
@@ -69,15 +71,15 @@ public class RebarBlock extends Block implements SimpleWaterloggedBlock {
     }
 
 
-    protected @NotNull VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    public @NotNull VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return (state.getValue(UP) ? SHAPE : BIG_SHAPE);
     }
 
-    protected boolean useShapeForLightOcclusion(BlockState state) {
+    public boolean useShapeForLightOcclusion(BlockState state) {
         return false;
     }
 
-    protected VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) {
+    public VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) {
         return Shapes.empty();
     }
 
@@ -143,17 +145,14 @@ public class RebarBlock extends Block implements SimpleWaterloggedBlock {
                 .setValue(SOUTH_UPPER, upperCheck(level.getBlockState(pos.south()), Direction.SOUTH))
                 .setValue(WEST_UPPER, upperCheck(level.getBlockState(pos.west()), Direction.WEST));
     }
-
-
-    protected @NotNull FluidState getFluidState(BlockState state) {
+    public @NotNull FluidState getFluidState(BlockState state) {
         return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(state);
     }
 
-    protected boolean propagatesSkylightDown(BlockState state, BlockGetter level, BlockPos pos) {
+    public boolean propagatesSkylightDown(BlockState state, BlockGetter level, BlockPos pos) {
         return true;
     }
-
-    protected @NotNull BlockState rotate(BlockState state, Rotation rotation) {
+    public @NotNull BlockState rotate(BlockState state, Rotation rotation) {
         return state
                 .setValue(PROPERTY_BY_DIRECTION.get(rotation.rotate(Direction.NORTH)), state.getValue(NORTH))
                 .setValue(PROPERTY_BY_DIRECTION.get(rotation.rotate(Direction.SOUTH)), state.getValue(SOUTH))
@@ -162,8 +161,7 @@ public class RebarBlock extends Block implements SimpleWaterloggedBlock {
                 .setValue(PROPERTY_BY_DIRECTION.get(rotation.rotate(Direction.UP)), state.getValue(UP))
                 .setValue(PROPERTY_BY_DIRECTION.get(rotation.rotate(Direction.DOWN)), state.getValue(DOWN));
     }
-
-    protected @NotNull BlockState mirror(BlockState state, Mirror mirror) {
+    public @NotNull BlockState mirror(BlockState state, Mirror mirror) {
         return state.setValue(PROPERTY_BY_DIRECTION.get(mirror.mirror(Direction.NORTH)), state.getValue(NORTH)).setValue(PROPERTY_BY_DIRECTION.get(mirror.mirror(Direction.SOUTH)), state.getValue(SOUTH)).setValue(PROPERTY_BY_DIRECTION.get(mirror.mirror(Direction.EAST)), state.getValue(EAST)).setValue(PROPERTY_BY_DIRECTION.get(mirror.mirror(Direction.WEST)), state.getValue(WEST)).setValue(PROPERTY_BY_DIRECTION.get(mirror.mirror(Direction.UP)), state.getValue(UP)).setValue(PROPERTY_BY_DIRECTION.get(mirror.mirror(Direction.DOWN)), state.getValue(DOWN));
     }
 

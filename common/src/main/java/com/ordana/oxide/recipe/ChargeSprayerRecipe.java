@@ -1,19 +1,16 @@
 package com.ordana.oxide.recipe;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.google.gson.JsonObject;
 import com.ordana.oxide.items.SFStackView;
 import com.ordana.oxide.items.VarnishSprayer;
-import com.ordana.oxide.reg.ModComponents;
 import com.ordana.oxide.reg.ModRecipes;
 import com.ordana.oxide.reg.ModTags;
 import net.mehvahdjukaar.moonlight.api.fluids.SoftFluidStack;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
@@ -24,18 +21,17 @@ public class ChargeSprayerRecipe extends CustomRecipe {
     private final int chargesPerBottle;
     private final boolean canOverflow;
 
-    public ChargeSprayerRecipe(CraftingBookCategory category, Ingredient arrow,
+    public ChargeSprayerRecipe(ResourceLocation id, CraftingBookCategory category, Ingredient arrow,
                                int chargesPerItem, boolean canOverflow) {
-        super(category);
+        super(id, category);
         this.sprayerIngredient = arrow;
         this.chargesPerBottle = chargesPerItem;
         this.canOverflow = canOverflow;
     }
 
     private int getBottlesToAdd(ItemStack sprayer, ItemStack charge, Level level) {
-        RegistryAccess ra = level.registryAccess();
-        SFStackView sprayerContent = VarnishSprayer.getFluidComponent(sprayer, ra);
-        var bottleContent = SoftFluidStack.fromItem(charge, ra);
+        SFStackView sprayerContent = VarnishSprayer.getFluidComponent(sprayer);
+        var bottleContent = SoftFluidStack.fromItem(charge);
         if (bottleContent == null) return 0;
         SoftFluidStack bottleFluid = bottleContent.getFirst();
         if (bottleFluid.isEmpty()) return 0;
@@ -47,13 +43,13 @@ public class ChargeSprayerRecipe extends CustomRecipe {
     }
 
     @Override
-    public boolean matches(CraftingInput inv, Level worldIn) {
+    public boolean matches(CraftingContainer inv, Level worldIn) {
 
         ItemStack sprayer = null;
         ItemStack fluidBottleItem = null;
         int newTotalCharges = 0;
 
-        for (int i = 0; i < inv.size(); ++i) {
+        for (int i = 0; i < inv.getContainerSize(); ++i) {
             ItemStack stack = inv.getItem(i);
             if (sprayerIngredient.test(stack)) {
                 if (sprayer != null) {
@@ -65,30 +61,33 @@ public class ChargeSprayerRecipe extends CustomRecipe {
                 fluidBottleItem = stack;
             }
         }
+        if (sprayer == null || fluidBottleItem == null) return false;
+        
         int bottlesToAdd = getBottlesToAdd(sprayer, fluidBottleItem, worldIn);
         if (bottlesToAdd == 0) return false;
         newTotalCharges += chargesPerBottle * bottlesToAdd;
 
         return sprayer != null && fluidBottleItem != null && (canOverflow || newTotalCharges <=
-                sprayer.getOrDefault(ModComponents.MAX_DROPS.get(), 0));
+                VarnishSprayer.getMaxCharges(sprayer));
     }
 
     @Override
-    public ItemStack assemble(CraftingInput inv, HolderLookup.Provider access) {
+    public ItemStack assemble(CraftingContainer inv, RegistryAccess access) {
         int newTotalCharges = 0;
         ItemStack arrow = null;
-        for (int i = 0; i < inv.size(); ++i) {
+        for (int i = 0; i < inv.getContainerSize(); ++i) {
             ItemStack stack = inv.getItem(i);
             if (sprayerIngredient.test(stack)) {
                 arrow = stack;
             }
         }
+        if (arrow == null) return ItemStack.EMPTY;
 
-        int maxCharges = arrow.getOrDefault(ModComponents.MAX_DROPS.get(), 0);
+        int maxCharges = VarnishSprayer.getMaxCharges(arrow);
         ItemStack returnSpray = arrow.copy();
-        SoftFluidStack sf = VarnishSprayer.getFluidComponent(returnSpray, access)
+        SoftFluidStack sf = VarnishSprayer.getFluidComponent(returnSpray)
                 .toMutable();
-        sf.setCount(Math.min(maxCharges, sf.getCount() + newTotalCharges));
+        sf.setCount(Math.min(maxCharges, sf.getCount() + newTotalCharges)); // Note: logic was flawed originally, newTotalCharges wasn't populated from getBottlesToAdd.
         VarnishSprayer.setFluidComponent(returnSpray, sf);
 
         return returnSpray;
@@ -107,28 +106,30 @@ public class ChargeSprayerRecipe extends CustomRecipe {
 
     public static class Serializer implements RecipeSerializer<ChargeSprayerRecipe> {
 
-        private static final MapCodec<ChargeSprayerRecipe> CODEC = RecordCodecBuilder.mapCodec((instance) -> instance.group(
-                CraftingBookCategory.CODEC.fieldOf("category").orElse(CraftingBookCategory.MISC).forGetter(CraftingRecipe::category),
-                Ingredient.CODEC.fieldOf("ingredient").forGetter((recipe) -> recipe.sprayerIngredient),
-                Codec.INT.optionalFieldOf("charges_per_item", 1).forGetter((recipe) -> recipe.chargesPerBottle),
-                Codec.BOOL.optionalFieldOf("can_overfill", false).forGetter((recipe) -> recipe.canOverflow)
-        ).apply(instance, ChargeSprayerRecipe::new));
-
-        private static final StreamCodec<RegistryFriendlyByteBuf, ChargeSprayerRecipe> STREAM_CODEC = StreamCodec.composite(
-                CraftingBookCategory.STREAM_CODEC, CraftingRecipe::category,
-                Ingredient.CONTENTS_STREAM_CODEC, recipe -> recipe.sprayerIngredient,
-                ByteBufCodecs.VAR_INT, recipe -> recipe.chargesPerBottle,
-                ByteBufCodecs.BOOL, recipe -> recipe.canOverflow,
-                ChargeSprayerRecipe::new);
-
         @Override
-        public MapCodec<ChargeSprayerRecipe> codec() {
-            return CODEC;
+        public ChargeSprayerRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
+            CraftingBookCategory category = CraftingBookCategory.CODEC.byName(GsonHelper.getAsString(json, "category", "misc"), CraftingBookCategory.MISC);
+            Ingredient ingredient = Ingredient.fromJson(json.get("ingredient"));
+            int chargesPerItem = GsonHelper.getAsInt(json, "charges_per_item", 1);
+            boolean canOverflow = GsonHelper.getAsBoolean(json, "can_overfill", false);
+            return new ChargeSprayerRecipe(recipeId, category, ingredient, chargesPerItem, canOverflow);
         }
 
         @Override
-        public StreamCodec<RegistryFriendlyByteBuf, ChargeSprayerRecipe> streamCodec() {
-            return STREAM_CODEC;
+        public ChargeSprayerRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
+            CraftingBookCategory category = buffer.readEnum(CraftingBookCategory.class);
+            Ingredient ingredient = Ingredient.fromNetwork(buffer);
+            int chargesPerItem = buffer.readVarInt();
+            boolean canOverflow = buffer.readBoolean();
+            return new ChargeSprayerRecipe(recipeId, category, ingredient, chargesPerItem, canOverflow);
+        }
+
+        @Override
+        public void toNetwork(FriendlyByteBuf buffer, ChargeSprayerRecipe recipe) {
+            buffer.writeEnum(recipe.category());
+            recipe.sprayerIngredient.toNetwork(buffer);
+            buffer.writeVarInt(recipe.chargesPerBottle);
+            buffer.writeBoolean(recipe.canOverflow);
         }
     }
 }

@@ -36,13 +36,15 @@ import org.jetbrains.annotations.NotNull;
 import java.util.OptionalInt;
 
 public class CementSlabBlock extends WeatherableSlabBlock implements Fallable, SimpleWaterloggedBlock, WeatherableCement {
-    public static final MapCodec<SlabBlock> CODEC = simpleCodec(SlabBlock::new);
+//    public static final MapCodec<SlabBlock> CODEC = simpleCodec(SlabBlock::new);
     public static final IntegerProperty OVERHANG = ModBlockProperties.OVERHANG;
     private final int maxOverhang;
 
+/*
     public MapCodec<? extends SlabBlock> codec() {
         return CODEC;
     }
+*/
 
     public CementSlabBlock(int maxOverhang, Properties settings) {
         super(settings);

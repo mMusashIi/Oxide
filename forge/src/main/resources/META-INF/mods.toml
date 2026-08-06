@@ -17,16 +17,16 @@ issueTrackerURL = "${mod_github}/issues"
     itemIcon = "oxide:rusted_cut_iron" #catalogue icon
 
 [[dependencies.${mod_id}]]
-    modId = "neoforge"
+    modId = "forge"
     type = "required"
-    versionRange = "${neo_version_range}"
+    versionRange = "${forge_version_range}"
     ordering = "NONE"
     side = "BOTH"
 
 [[dependencies.${mod_id}]]
     modId = "minecraft"
     type = "required"
-    versionRange = "[${minecraft_min_version},${minecraft_max_version})"
+    versionRange = "[${minecraft_min_version},${minecraft_max_version}]"
     ordering = "NONE"
     side = "BOTH"
 
@@ -34,6 +34,6 @@ issueTrackerURL = "${mod_github}/issues"
     modId = "moonlight"
     type = "required"
     referralUrl = "https://www.curseforge.com/minecraft/mc-mods/selene"
-    versionRange="[1.21-2.17.34,]"
+    versionRange="${moonlight_version_range}"
     ordering = "NONE"
     side = "BOTH"

@@ -7,9 +7,13 @@ pluginManagement {
     }
 }
 
+plugins {
+    id "org.gradle.toolchains.foojay-resolver-convention" version "0.9.0"
+}
+
 include("common")
-include("fabric")
-include("neoforge")
+// include("fabric")  // not needed for forge-only build
+include("forge")
 
 rootProject.name = "oxide-multiloader"
 

@@ -1,14 +1,14 @@
-package com.ordana.oxide.neoforge;
+package com.ordana.oxide.forge;
 
 import com.ordana.oxide.Oxide;
 import com.ordana.oxide.reg.ModSetup;
 import net.mehvahdjukaar.moonlight.api.platform.PlatHelper;
-import net.neoforged.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod;
 
 @Mod(Oxide.MOD_ID)
-public class OxideNeoForge {
+public class OxideForge {
 
-    public OxideNeoForge() {
+    public OxideForge() {
         Oxide.commonInit();
         PlatHelper.addCommonSetup(ModSetup::setup);
     }

@@ -1,6 +1,6 @@
 package com.ordana.oxide.blocks.rusty;
 
-import com.mojang.serialization.MapCodec;
+// import com.mojang.serialization.MapCodec;
 import com.ordana.oxide.entities.RustyNailEntity;
 import com.ordana.oxide.entities.SprayParticleEntity;
 import com.ordana.oxide.reg.ModBlockProperties;
@@ -13,7 +13,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -37,7 +36,6 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.function.BiConsumer;
 
 public class RustableFenceGateBlock extends HorizontalDirectionalBlock implements Rustable {
 
@@ -77,10 +75,12 @@ public class RustableFenceGateBlock extends HorizontalDirectionalBlock implement
                 .setValue(VARNISHED, false));
     }
 
+    /*
     @Override
     protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
         return null;
     }
+    */
 
     public void fallOn(Level level, BlockState state, BlockPos pos, Entity entity, float fallDistance) {
         if (entity instanceof LivingEntity liv) entity.causeFallDamage(Math.min(fallDistance, (liv.getHealth() / 2) + 2f), 2.0F, level.damageSources().stalagmite());
@@ -105,16 +105,14 @@ public class RustableFenceGateBlock extends HorizontalDirectionalBlock implement
         if (!state.getValue(VARNISHED)) this.tryWeather(state, serverLevel, pos, random);
     }
 
-    public ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        return this.use(stack, state, level, pos, player, hand, hitResult);
+    public InteractionResult use( BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+        return ((Rustable) this).use(state, level, pos, player, hand, hitResult);
     }
-
-
-    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return state.getValue(FACING).getAxis() == Direction.Axis.X ? X_SHAPE_LOW : Z_SHAPE_LOW;
     }
 
-    protected BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
         Direction.Axis axis = direction.getAxis();
         if (neighborState.getBlock() instanceof RustableFenceGateBlock && !axis.isVertical()) {
             if (!state.getValue(WIDE) && ((state.getValue(FACING) == neighborState.getValue(FACING)) || (state.getValue(FACING) == neighborState.getValue(FACING).getOpposite()))) {
@@ -140,8 +138,7 @@ public class RustableFenceGateBlock extends HorizontalDirectionalBlock implement
         }
 
     }
-
-    protected VoxelShape getBlockSupportShape(BlockState state, BlockGetter level, BlockPos pos) {
+    public VoxelShape getBlockSupportShape(BlockState state, BlockGetter level, BlockPos pos) {
         if (state.getValue(OPEN)) {
             return Shapes.empty();
         } else {
@@ -149,7 +146,7 @@ public class RustableFenceGateBlock extends HorizontalDirectionalBlock implement
         }
     }
 
-    protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         if (state.getValue(OPEN)) {
             if (context instanceof EntityCollisionContext c) {
                 var e = c.getEntity();
@@ -163,7 +160,7 @@ public class RustableFenceGateBlock extends HorizontalDirectionalBlock implement
         }
     }
 
-    protected VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) {
+    public VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) {
         return state.getValue(FACING).getAxis() == Direction.Axis.X ? X_OCCLUSION_SHAPE_LOW : Z_OCCLUSION_SHAPE_LOW;
     }
 
@@ -237,29 +234,20 @@ public class RustableFenceGateBlock extends HorizontalDirectionalBlock implement
         }
 
         boolean bl = state.getValue(OPEN);
-        level.playSound(player, pos, bl ? SoundEvents.COPPER_TRAPDOOR_OPEN : SoundEvents.COPPER_TRAPDOOR_CLOSE, SoundSource.BLOCKS, 1.0F, level.getRandom().nextFloat() * 0.1F + 0.9F);
+        level.playSound(player, pos, bl ? SoundEvents.IRON_TRAPDOOR_OPEN : SoundEvents.IRON_TRAPDOOR_CLOSE, SoundSource.BLOCKS, 1.0F, level.getRandom().nextFloat() * 0.1F + 0.9F);
         level.gameEvent(player, bl ? GameEvent.BLOCK_OPEN : GameEvent.BLOCK_CLOSE, pos);
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
-    protected void onExplosionHit(BlockState state, Level level, BlockPos pos, Explosion explosion, BiConsumer<ItemStack, BlockPos> dropConsumer) {
-        if (explosion.canTriggerBlocks() && !(Boolean)state.getValue(POWERED)) {
-            boolean bl = state.getValue(OPEN);
-            level.setBlockAndUpdate(pos, state.setValue(OPEN, !bl));
-            level.playSound(null, pos, bl ? SoundEvents.COPPER_TRAPDOOR_CLOSE : SoundEvents.COPPER_TRAPDOOR_OPEN, SoundSource.BLOCKS, 1.0F, level.getRandom().nextFloat() * 0.1F + 0.9F);
-            level.gameEvent(bl ? GameEvent.BLOCK_CLOSE : GameEvent.BLOCK_OPEN, pos, GameEvent.Context.of(state));
-        }
 
-        super.onExplosionHit(state, level, pos, explosion, dropConsumer);
-    }
 
-    protected void neighborChanged(BlockState state, Level level, BlockPos pos, Block neighborBlock, BlockPos neighborPos, boolean movedByPiston) {
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block neighborBlock, BlockPos neighborPos, boolean movedByPiston) {
         if (!level.isClientSide) {
             boolean bl = level.hasNeighborSignal(pos);
             if (state.getValue(POWERED) != bl) {
                 level.setBlock(pos, state.setValue(POWERED, bl).setValue(OPEN, bl), 2);
                 if (state.getValue(OPEN) != bl) {
-                    level.playSound(null, pos, bl ? SoundEvents.COPPER_TRAPDOOR_OPEN : SoundEvents.COPPER_TRAPDOOR_CLOSE, SoundSource.BLOCKS, 1.0F, level.getRandom().nextFloat() * 0.1F + 0.9F);
+                    level.playSound(null, pos, bl ? SoundEvents.IRON_TRAPDOOR_OPEN : SoundEvents.IRON_TRAPDOOR_CLOSE, SoundSource.BLOCKS, 1.0F, level.getRandom().nextFloat() * 0.1F + 0.9F);
                     level.gameEvent(null, bl ? GameEvent.BLOCK_OPEN : GameEvent.BLOCK_CLOSE, pos);
                 }
             }

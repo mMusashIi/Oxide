@@ -4,9 +4,7 @@ plugins {
 
 architectury {
     platformSetupLoomIde()
-    neoForge {
-        //platformPackage = "forge"
-    }
+    forge()
 }
 
 
@@ -19,12 +17,12 @@ configurations {
     shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
     compileClasspath.extendsFrom common
     runtimeClasspath.extendsFrom common
-    developmentNeoForge.extendsFrom common
+    developmentForge.extendsFrom common
 }
 
 
 processResources {
-    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta', 'update.json']) {
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta', 'update.json']) {
         expand rootProject.ext.replaceProperties + [project: project]
     }
 }
@@ -40,7 +38,7 @@ shadowJar {
 remapJar {
     input.set shadowJar.archiveFile
     dependsOn shadowJar
-    archiveClassifier = "neoforge"
+    archiveClassifier = "forge"
     atAccessWideners.add("${rootProject.mod_id}.accesswidener") // this is a path inside the mod jar
 }
 
@@ -53,11 +51,11 @@ sourcesJar {
     dependsOn commonSources
     from commonSources.archiveFile.map { zipTree(it) }
 
-    archiveClassifier = "neoforge-sources"
+    archiveClassifier = "forge-sources"
 }
 
 remapSourcesJar{
-    archiveClassifier = "neoforge-sources"
+    archiveClassifier = "forge-sources"
 }
 
 components.java {
@@ -89,15 +87,15 @@ publishing {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-    neoForge "net.neoforged:neoforge:${neo_version}"
+    forge "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
     common(project(path: ":common", configuration: "namedElements")) { transitive false }
-    shadowCommon(project(path: ":common", configuration: "transformProductionNeoForge")) { transitive = false }
+    shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive = false }
 
-    modImplementation("curse.maven:selene-499980:7100674")
-    modLocalRuntime "dev.emi:emi-neoforge:${rootProject.emi_version}"
+    modImplementation "maven.modrinth:moonlight:1.20-2.16.34-forge"
+    modLocalRuntime "dev.emi:emi-forge:${rootProject.emi_version}"
 
-    //modImplementation("net.mehvahdjukaar:moonlight-neoforge:${moonlight_version}")
+    //modImplementation("net.mehvahdjukaar:moonlight-forge:${moonlight_version}")
 
 
     implementation 'org.jetbrains:annotations:22.0.0'

@@ -7,6 +7,7 @@ import com.ordana.oxide.entities.SprayParticleEntity;
 import com.ordana.oxide.items.SFStackView;
 import net.mehvahdjukaar.moonlight.api.platform.RegHelper;
 import net.minecraft.network.syncher.EntityDataSerializer;
+import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 
@@ -17,8 +18,11 @@ public class ModEntities {
     public static void init() {
     }
 
-    public static final Supplier<EntityDataSerializer<SFStackView>> FLUID_DATA = RegHelper.registerEntityDataSerializer(
-            Oxide.res("fluid_data"), () -> EntityDataSerializer.forValueType(SFStackView.STREAM_CODEC));
+    public static void registerSerializers() {
+        EntityDataSerializers.registerSerializer(SFStackView.SERIALIZER);
+    }
+
+    public static final EntityDataSerializer<SFStackView> FLUID_DATA = SFStackView.SERIALIZER;
 
     public static final Supplier<EntityType<RustyNailEntity>> RUSTY_NAIL = RegHelper.registerEntityType(
             Oxide.res("rusty_nail"),

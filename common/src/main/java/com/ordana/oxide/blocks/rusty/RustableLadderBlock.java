@@ -37,12 +37,12 @@ public class RustableLadderBlock extends LadderBlock implements Rustable{
         return blockState.isFaceSturdy(blockReader, pos, direction);
     }
 
-    protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
         Direction direction = state.getValue(FACING);
         return (this.canAttachTo(level, pos.relative(direction.getOpposite()), direction) || level.getBlockState(pos.above()).getBlock() instanceof RustableLadderBlock);
     }
 
-    protected BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
         if (!state.canSurvive(level, pos)) {
             return Blocks.AIR.defaultBlockState();
         }

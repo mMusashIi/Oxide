@@ -31,7 +31,7 @@ public class RustableDoorBlock extends DoorBlock implements Rustable {
     protected final Rustable.RustLevel rustLevel;
 
     public RustableDoorBlock(Rustable.RustLevel rustLevel, Properties properties) {
-        super(BlockSetType.IRON, Rustable.setRandomTicking(properties, rustLevel));
+        super(Rustable.setRandomTicking(properties, rustLevel), BlockSetType.IRON);
         this.rustLevel = rustLevel;
 
         this.registerDefaultState(this.defaultBlockState().setValue(VARNISHED, false));

@@ -30,7 +30,7 @@ public class EmiIntegration implements EmiPlugin {
             EmiStack input = EmiStack.of(key);
             EmiStack output = EmiStack.of(rust.get(key));
             registry.addRecipe(EmiWorldInteractionRecipe.builder()
-                .id(ResourceLocation.fromNamespaceAndPath("oxide", "/sponge_rusting/" + blockId.getNamespace() + "/" + blockId.getPath()))
+                .id(new ResourceLocation("oxide", "/sponge_rusting/" + blockId.getNamespace() + "/" + blockId.getPath()))
                 .leftInput(input)
                 .rightInput(EmiStack.of(Items.WET_SPONGE), true)
                 .output(output)

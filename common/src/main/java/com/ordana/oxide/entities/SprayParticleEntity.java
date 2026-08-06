@@ -7,13 +7,13 @@ import com.ordana.oxide.items.SFStackView;
 import com.ordana.oxide.reg.*;
 import net.mehvahdjukaar.moonlight.api.entity.ImprovedProjectileEntity;
 import net.mehvahdjukaar.moonlight.api.entity.ParticleTrailEmitter;
-import net.mehvahdjukaar.moonlight.api.fluids.MLBuiltinSoftFluids;
+import net.mehvahdjukaar.moonlight.api.fluids.BuiltInSoftFluids;
 import net.mehvahdjukaar.moonlight.api.fluids.SoftFluid;
 import net.mehvahdjukaar.moonlight.api.fluids.SoftFluidStack;
 import net.mehvahdjukaar.moonlight.api.set.BlocksColorAPI;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.component.DataComponents;
+
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -32,7 +32,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.component.DyedItemColor;
+
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.Block;
@@ -49,29 +49,28 @@ import java.util.function.Supplier;
 public class SprayParticleEntity extends ImprovedProjectileEntity {
 
     public static final Supplier<EntityDataAccessor<SFStackView>> DATA_FLUID = Suppliers.memoize(() ->
-            SynchedEntityData.defineId(SprayParticleEntity.class, Preconditions.checkNotNull(ModEntities.FLUID_DATA.get())));
+            SynchedEntityData.defineId(SprayParticleEntity.class, Preconditions.checkNotNull(ModEntities.FLUID_DATA)));
 
     private final ParticleTrailEmitter trailEmitter = new ParticleTrailEmitter.Builder()
             .maxParticlesPerTick(20)
-            .minParticlesPerTick(1)
             .spacing(0.3f)
             .build();
 
     public SprayParticleEntity(Level level, LivingEntity shooter, SFStackView fluid) {
         super(ModEntities.SPRAY_ENTITY.get(), shooter, level);
-        this.maxAge = ((level.dimensionType().ultraWarm() && fluid.is(MLBuiltinSoftFluids.WATER)) ? 7 : 300);
+        this.maxAge = ((level.dimensionType().ultraWarm() && fluid.toMutable().is(BuiltInSoftFluids.WATER)) ? 7 : 300);
         this.setDataFluid(fluid);
     }
 
     public SprayParticleEntity(Level level, SFStackView fluid) {
         super(ModEntities.SPRAY_ENTITY.get(), level);
-        this.maxAge = ((level.dimensionType().ultraWarm() && fluid.is(MLBuiltinSoftFluids.WATER)) ? 7 : 300);
+        this.maxAge = ((level.dimensionType().ultraWarm() && fluid.toMutable().is(BuiltInSoftFluids.WATER)) ? 7 : 300);
         this.setDataFluid(fluid);
     }
 
     public SprayParticleEntity(Level level, double x, double y, double z, SFStackView fluid) {
         super(ModEntities.SPRAY_ENTITY.get(), x, y, z, level);
-        this.maxAge = ((level.dimensionType().ultraWarm() && fluid.is(MLBuiltinSoftFluids.WATER)) ? 7 : 300);
+        this.maxAge = ((level.dimensionType().ultraWarm() && fluid.toMutable().is(BuiltInSoftFluids.WATER)) ? 7 : 300);
         this.setDataFluid(fluid);
     }
 
@@ -81,9 +80,9 @@ public class SprayParticleEntity extends ImprovedProjectileEntity {
 
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(DATA_FLUID.get(), SFStackView.of(SoftFluidStack.empty(this.level().registryAccess())));
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(DATA_FLUID.get(), SFStackView.of(SoftFluidStack.empty()));
     }
 
     public void setDataFluid(SFStackView fluid) {
@@ -100,13 +99,13 @@ public class SprayParticleEntity extends ImprovedProjectileEntity {
     @Override
     public void addAdditionalSaveData(CompoundTag compound) {
         super.addAdditionalSaveData(compound);
-        compound.put("fluid", this.getDataFluid().save(this.level().registryAccess()));
+        compound.put("fluid", this.getDataFluid().save());
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
-        this.setDataFluid(SFStackView.load(this.level().registryAccess(), compound.getCompound("fluid")));
+        this.setDataFluid(SFStackView.load(compound.getCompound("fluid")));
     }
 
     @Override
@@ -172,7 +171,7 @@ public class SprayParticleEntity extends ImprovedProjectileEntity {
         BlockState state = this.level().getBlockState(pos);
 
 
-        if (getDataFluid().is(MLBuiltinSoftFluids.LAVA)) {
+        if (getDataFluid().toMutable().is(BuiltInSoftFluids.LAVA)) {
             placeFire(this.level(), hit);
             if (random.nextFloat() > 0.75) level().playSound(null, pos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 0.5f, 0.8f + random.nextFloat());
         }
@@ -182,7 +181,7 @@ public class SprayParticleEntity extends ImprovedProjectileEntity {
             if (random.nextFloat() > 0.75) level().playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 0.5f, 0.8f + random.nextFloat());
         }
 
-        if (getDataFluid().is(MLBuiltinSoftFluids.WATER)) {
+        if (getDataFluid().toMutable().is(BuiltInSoftFluids.WATER)) {
             var relPos = pos.relative(hit.getDirection());
             var relState = level().getBlockState(relPos);
             if (relState.is(ModTags.WATER_DESTROYS)) level().destroyBlock(relPos, false);
@@ -238,14 +237,17 @@ public class SprayParticleEntity extends ImprovedProjectileEntity {
         if (getDataFluid().is(ModTags.PAINT)) {
             if (entity instanceof LivingEntity livingEntity) {
                 for (ItemStack armor : livingEntity.getArmorSlots()) {
-                    if (armor.is(ModTags.LEATHER_ARMOR)) armor.set(DataComponents.DYED_COLOR, new DyedItemColor(getDye(getDataFluid().getFluid()).getId(), true));
+                    if (armor.is(ModTags.LEATHER_ARMOR)) {
+                        CompoundTag tag = armor.getOrCreateTagElement("display");
+                        tag.putInt("color", getDye(getDataFluid().getFluid()).getId());
+                    }
                 }
             }
             if (entity instanceof Sheep sheep) sheep.setColor(getDye(getDataFluid().getFluid()));
         }
-        if (getDataFluid().is(MLBuiltinSoftFluids.WATER)) if (entity instanceof Blaze) entity.hurt(this.damageSources().thrown(this, this.getOwner()), (float) 3);
-        if (getDataFluid().is(MLBuiltinSoftFluids.LAVA)) if (!entity.fireImmune()) entity.lavaHurt();
-        if (getDataFluid().is(MLBuiltinSoftFluids.MILK)) if (entity instanceof LivingEntity livingEntity) livingEntity.removeAllEffects();
+        if (getDataFluid().toMutable().is(BuiltInSoftFluids.WATER)) if (entity instanceof Blaze) entity.hurt(this.damageSources().thrown(this, this.getOwner()), (float) 3);
+        if (getDataFluid().toMutable().is(BuiltInSoftFluids.LAVA)) if (!entity.fireImmune()) entity.lavaHurt();
+        if (getDataFluid().toMutable().is(BuiltInSoftFluids.MILK)) if (entity instanceof LivingEntity livingEntity) livingEntity.removeAllEffects();
         if (getDataFluid().is(ModTags.VARNISH)) if (entity instanceof LivingEntity livingEntity) livingEntity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 1, true, false, true));
     }
 

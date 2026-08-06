@@ -28,7 +28,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 
 public class ReinforcedCementBlock extends Block implements WeatherableCement {
-    public static final MapCodec<WallBlock> CODEC = simpleCodec(WallBlock::new);
+//    public static final MapCodec<WallBlock> CODEC = simpleCodec(WallBlock::new);
 
     public static final BooleanProperty UP;
     public static final BooleanProperty DOWN;
@@ -47,9 +47,11 @@ public class ReinforcedCementBlock extends Block implements WeatherableCement {
     protected static final VoxelShape BIG_SHAPE;
 
 
+/*
     public @NotNull MapCodec<WallBlock> codec() {
         return CODEC;
     }
+*/
 
     public ReinforcedCementBlock(Properties properties) {
         super(properties);
@@ -71,19 +73,17 @@ public class ReinforcedCementBlock extends Block implements WeatherableCement {
         super.playerDestroy(level, player, pos, state, blockEntity, tool);
     }
 
-    protected @NotNull VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    public @NotNull VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return (state.getValue(TYPE) == SlabType.DOUBLE ? BIG_SHAPE : SHAPE);
     }
 
-    protected boolean useShapeForLightOcclusion(BlockState state) {
+    public boolean useShapeForLightOcclusion(BlockState state) {
         return false;
     }
-
-    protected @NotNull BlockState rotate(BlockState state, Rotation rotation) {
+    public @NotNull BlockState rotate(BlockState state, Rotation rotation) {
         return state.setValue(PROPERTY_BY_DIRECTION.get(rotation.rotate(Direction.NORTH)), state.getValue(NORTH)).setValue(PROPERTY_BY_DIRECTION.get(rotation.rotate(Direction.SOUTH)), state.getValue(SOUTH)).setValue(PROPERTY_BY_DIRECTION.get(rotation.rotate(Direction.EAST)), state.getValue(EAST)).setValue(PROPERTY_BY_DIRECTION.get(rotation.rotate(Direction.WEST)), state.getValue(WEST)).setValue(PROPERTY_BY_DIRECTION.get(rotation.rotate(Direction.UP)), state.getValue(UP)).setValue(PROPERTY_BY_DIRECTION.get(rotation.rotate(Direction.DOWN)), state.getValue(DOWN));
     }
-
-    protected @NotNull BlockState mirror(BlockState state, Mirror mirror) {
+    public @NotNull BlockState mirror(BlockState state, Mirror mirror) {
         return state.setValue(PROPERTY_BY_DIRECTION.get(mirror.mirror(Direction.NORTH)), state.getValue(NORTH)).setValue(PROPERTY_BY_DIRECTION.get(mirror.mirror(Direction.SOUTH)), state.getValue(SOUTH)).setValue(PROPERTY_BY_DIRECTION.get(mirror.mirror(Direction.EAST)), state.getValue(EAST)).setValue(PROPERTY_BY_DIRECTION.get(mirror.mirror(Direction.WEST)), state.getValue(WEST)).setValue(PROPERTY_BY_DIRECTION.get(mirror.mirror(Direction.UP)), state.getValue(UP)).setValue(PROPERTY_BY_DIRECTION.get(mirror.mirror(Direction.DOWN)), state.getValue(DOWN));
     }
 

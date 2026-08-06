@@ -41,9 +41,7 @@ public class CinderBlockBlock extends Block implements SimpleWaterloggedBlock {
     private static final int[] SHAPE_BY_STATE;
     //private final Block base;
     //protected final BlockState baseState;
-
-
-    protected boolean canBeReplaced(BlockState state, BlockPlaceContext useContext) {
+    public boolean canBeReplaced(BlockState state, BlockPlaceContext useContext) {
         ItemStack itemStack = useContext.getItemInHand();
         var shape = state.getValue(SHAPE);
         var dir = state.getValue(FACING).getOpposite();
@@ -89,11 +87,10 @@ public class CinderBlockBlock extends Block implements SimpleWaterloggedBlock {
         //this.baseState = baseState;
     }
 
-    protected boolean useShapeForLightOcclusion(BlockState state) {
+    public boolean useShapeForLightOcclusion(BlockState state) {
         return true;
     }
-
-    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return (state.getValue(HALF) == Half.TOP ? TOP_SHAPES : BOTTOM_SHAPES)[SHAPE_BY_STATE[this.getShapeIndex(state)]];
     }
 
@@ -113,7 +110,7 @@ public class CinderBlockBlock extends Block implements SimpleWaterloggedBlock {
         return blockState.setValue(SHAPE, getStairsShape(blockState, context.getLevel(), blockPos));
     }
 
-    protected BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
         if (state.getValue(WATERLOGGED)) {
             level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
@@ -158,11 +155,10 @@ public class CinderBlockBlock extends Block implements SimpleWaterloggedBlock {
         return state.getBlock() instanceof CinderBlockBlock;
     }
 
-    protected BlockState rotate(BlockState state, Rotation rotation) {
+    public BlockState rotate(BlockState state, Rotation rotation) {
         return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
     }
-
-    protected BlockState mirror(BlockState state, Mirror mirror) {
+    public BlockState mirror(BlockState state, Mirror mirror) {
         Direction direction = state.getValue(FACING);
         StairsShape stairsShape = state.getValue(SHAPE);
         switch (mirror) {
@@ -212,15 +208,14 @@ public class CinderBlockBlock extends Block implements SimpleWaterloggedBlock {
         return super.mirror(state, mirror);
     }
 
-    protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
         return level.getBlockState(pos.below()).isFaceSturdy(level, pos, Direction.UP);
     }
 
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING, HALF, SHAPE, WATERLOGGED);
     }
-
-    protected FluidState getFluidState(BlockState state) {
+    public FluidState getFluidState(BlockState state) {
         return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(state);
     }
 

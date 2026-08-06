@@ -35,7 +35,7 @@ public class RotatableSlabBlock extends SlabBlock {
     }
 
 
-    protected BlockState rotate(BlockState state, Rotation rotation) {
+    public BlockState rotate(BlockState state, Rotation rotation) {
         return rotatePillar(state, rotation);
     }
 

@@ -38,18 +38,13 @@ public class ModCreativeTab {
                 .equals(Oxide.MOD_ID)).map(Map.Entry::getValue).toList());
         Map<ResourceKey<CreativeModeTab>, List<ItemStack>> map = new HashMap<>();
         CreativeModeTabs.tabs().forEach(t -> map.putIfAbsent(BuiltInRegistries.CREATIVE_MODE_TAB.getResourceKey(t).get(), new ArrayList<>()));
-        var dummy = new RegHelper.ItemToTabEvent() {
-
-            @Override
-            public void addItems(ResourceKey<CreativeModeTab> resourceKey, @Nullable Predicate<ItemStack> predicate,
-                                 boolean reverse, List<ItemStack> list) {
-                var l = map.computeIfAbsent(resourceKey, t -> new ArrayList<>());
-                if (reverse) {
-                    var v = new ArrayList<>(list);
-                    l.addAll(v);
-                } else l.addAll(list);
-            }
-        };
+        // Use a simple accumulator instead of anonymous ItemToTabEvent (which is a record in this Moonlight version)
+        RegHelper.ItemToTabEvent dummy = new RegHelper.ItemToTabEvent((tab, predicate, reverse, list) -> {
+            var l = map.computeIfAbsent(tab, t -> new ArrayList<>());
+            if (reverse) {
+                l.addAll(new ArrayList<>(list));
+            } else l.addAll(list);
+        });
         registerItemsToTabs(dummy);
         for (var e : map.values()) {
             NON_HIDDEN_ITEMS.addAll(e);
@@ -66,7 +61,7 @@ public class ModCreativeTab {
         if (MOD_TAB != null && !isRunningSetup) {
             List<ItemStack> toAdd = new ArrayList<>();
             for (var i : NON_HIDDEN_ITEMS) {
-                if (toAdd.stream().noneMatch(a -> ItemStack.isSameItemSameComponents(a, i))) {
+                if (toAdd.stream().noneMatch(a -> ItemStack.isSameItemSameTags(a, i))) {
                     toAdd.add(i);
                 }
             }

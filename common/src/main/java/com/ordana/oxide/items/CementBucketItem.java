@@ -1,13 +1,13 @@
 package com.ordana.oxide.items;
 
 import com.ordana.oxide.reg.ModBlocks;
-import com.ordana.oxide.reg.ModComponents;
+import com.ordana.oxide.reg.ModNBTKeys;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.server.MinecraftServer;
@@ -20,8 +20,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.BlockItemStateProperties;
-import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
@@ -42,23 +41,23 @@ public class CementBucketItem extends Item {
     }
 
     public void setAmount(ItemStack stack, int amount) {
-        stack.set(ModComponents.CEMENT.get(), amount);
+        stack.getOrCreateTag().putInt(ModNBTKeys.CEMENT, amount);
     }
 
     public int getAmount(ItemStack stack) {
-        return stack.getOrDefault(ModComponents.CEMENT.get(), 0);
+        return stack.hasTag() ? stack.getTag().getInt(ModNBTKeys.CEMENT) : 0;
     }
 
 
     @Environment(EnvType.CLIENT)
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
+    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag tooltipFlag) {
         tooltip.add(Component.translatable("tooltip.oxide.cement_bucket", getAmount(stack), "128").setStyle(Style.EMPTY.applyFormat(ChatFormatting.GRAY)));
     }
 
     public InteractionResult useOn(UseOnContext context) {
         InteractionResult interactionResult = this.place(new BlockPlaceContext(context));
-        if (!interactionResult.consumesAction() && context.getItemInHand().has(DataComponents.FOOD)) {
+        if (!interactionResult.consumesAction() && context.getItemInHand().getItem().isEdible()) {
             InteractionResult interactionResult2 = super.use(context.getLevel(), context.getPlayer(), context.getHand()).getResult();
             return interactionResult2 == InteractionResult.CONSUME ? InteractionResult.CONSUME_PARTIAL : interactionResult2;
         } else {
@@ -90,7 +89,6 @@ public class CementBucketItem extends Item {
                     if (blockState2.is(blockState.getBlock())) {
                         blockState2 = this.updateBlockStateFromTag(blockPos, level, itemStack, blockState2);
                         this.updateCustomBlockEntityTag(blockPos, level, player, itemStack, blockState2);
-                        updateBlockEntityComponents(level, blockPos, itemStack);
                         blockState2.getBlock().setPlacedBy(level, blockPos, blockState2, player, itemStack);
                         if (player instanceof ServerPlayer) {
                             CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayer)player, blockPos, itemStack);
@@ -105,7 +103,9 @@ public class CementBucketItem extends Item {
                         if (getAmount(itemStack) > 1) this.setAmount(itemStack, getAmount(itemStack) - 1);
                         else {
                             itemStack.shrink(1);
-                            player.setItemInHand(context.getHand(), Items.BUCKET.getDefaultInstance());
+                            if (player != null) {
+                                player.setItemInHand(context.getHand(), Items.BUCKET.getDefaultInstance());
+                            }
                         }
 
                         context.getLevel().scheduleTick(context.getClickedPos(), blockState.getBlock(), 8);
@@ -126,14 +126,7 @@ public class CementBucketItem extends Item {
         return context;
     }
 
-    private static void updateBlockEntityComponents(Level level, BlockPos poa, ItemStack stack) {
-        BlockEntity blockEntity = level.getBlockEntity(poa);
-        if (blockEntity != null) {
-            blockEntity.applyComponentsFromItemStack(stack);
-            blockEntity.setChanged();
-        }
 
-    }
 
     protected boolean updateCustomBlockEntityTag(BlockPos pos, Level level, @Nullable Player player, ItemStack stack, BlockState state) {
         return updateCustomBlockEntityTag(level, player, pos, stack);
@@ -149,17 +142,7 @@ public class CementBucketItem extends Item {
     }
 
     private BlockState updateBlockStateFromTag(BlockPos pos, Level level, ItemStack stack, BlockState state) {
-        BlockItemStateProperties blockItemStateProperties = stack.getOrDefault(DataComponents.BLOCK_STATE, BlockItemStateProperties.EMPTY);
-        if (blockItemStateProperties.isEmpty()) {
-            return state;
-        } else {
-            BlockState blockState = blockItemStateProperties.apply(state);
-            if (blockState != state) {
-                level.setBlock(pos, blockState, 2);
-            }
-
-            return blockState;
-        }
+        return state;
     }
 
     protected boolean canPlace(BlockPlaceContext context, BlockState state) {
@@ -177,22 +160,27 @@ public class CementBucketItem extends Item {
     }
 
     public static boolean updateCustomBlockEntityTag(Level level, @Nullable Player player, BlockPos pos, ItemStack stack) {
-        MinecraftServer minecraftServer = level.getServer();
-        if (minecraftServer == null) {
+        MinecraftServer minecraftserver = level.getServer();
+        if (minecraftserver == null) {
             return false;
         } else {
-            CustomData customData = stack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
-            if (!customData.isEmpty()) {
-                BlockEntity blockEntity = level.getBlockEntity(pos);
-                if (blockEntity != null) {
-                    if (level.isClientSide || !blockEntity.onlyOpCanSetNbt() || player != null && player.canUseGameMasterBlocks()) {
-                        return customData.loadInto(blockEntity, level.registryAccess());
+            CompoundTag compoundtag = BlockItem.getBlockEntityData(stack);
+            if (compoundtag != null) {
+                BlockEntity blockentity = level.getBlockEntity(pos);
+                if (blockentity != null) {
+                    if (!level.isClientSide && blockentity.onlyOpCanSetNbt() && (player == null || !player.canUseGameMasterBlocks())) {
+                        return false;
                     }
-
-                    return false;
+                    CompoundTag compoundtag1 = blockentity.saveWithoutMetadata();
+                    CompoundTag compoundtag2 = compoundtag1.copy();
+                    compoundtag1.merge(compoundtag);
+                    if (!compoundtag1.equals(compoundtag2)) {
+                        blockentity.load(compoundtag1);
+                        blockentity.setChanged();
+                        return true;
+                    }
                 }
             }
-
             return false;
         }
     }

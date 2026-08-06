@@ -12,7 +12,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -80,7 +80,8 @@ public class CementedRebarBlock extends RebarBlock {
             serverLevel.setBlockAndUpdate(pos, ModBlocks.REINFORCED_CEMENT.get().withPropertiesOf(state));
     }
 
-    public ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+        ItemStack stack = player.getItemInHand(hand);
         if (stack.is(ItemTags.SHOVELS)) {
             var dir = player.getDirection();
             if (player.isCrouching()) dir = dir.getOpposite();
@@ -94,7 +95,7 @@ public class CementedRebarBlock extends RebarBlock {
                     level.setBlockAndUpdate(relativePos, cementState);
                     level.scheduleTick(relativePos, relativeState.getBlock(), FLOW_RATE);
                     level.playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 1.0F, level.getRandom().nextFloat() * 0.1F + 0.9F);
-                    return ItemInteractionResult.sidedSuccess(level.isClientSide);
+                    return InteractionResult.sidedSuccess(level.isClientSide);
                 }
                 if (relativeState.is(ModTags.WET_CEMENT)) {
                     if (relativeState.getValue(TYPE) == SlabType.BOTTOM) {
@@ -102,7 +103,7 @@ public class CementedRebarBlock extends RebarBlock {
                         level.setBlockAndUpdate(relativePos, state.setValue(TYPE, SlabType.DOUBLE));
                         level.scheduleTick(relativePos, relativeState.getBlock(), FLOW_RATE);
                         level.playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 1.0F, level.getRandom().nextFloat() * 0.1F + 0.9F);
-                        return ItemInteractionResult.sidedSuccess(level.isClientSide);
+                        return InteractionResult.sidedSuccess(level.isClientSide);
                     }
                 }
             }
@@ -112,7 +113,7 @@ public class CementedRebarBlock extends RebarBlock {
                     level.setBlockAndUpdate(relativePos, state.setValue(TYPE, SlabType.BOTTOM));
                     level.scheduleTick(relativePos, relativeState.getBlock(), FLOW_RATE);
                     level.playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 1.0F, level.getRandom().nextFloat() * 0.1F + 0.9F);
-                    return ItemInteractionResult.sidedSuccess(level.isClientSide);
+                    return InteractionResult.sidedSuccess(level.isClientSide);
                 }
                 if (relativeState.is(ModTags.WET_CEMENT)) {
                     if (relativeState.getValue(TYPE) == SlabType.BOTTOM) {
@@ -120,12 +121,12 @@ public class CementedRebarBlock extends RebarBlock {
                         level.setBlockAndUpdate(relativePos, state.setValue(TYPE, SlabType.DOUBLE));
                         level.scheduleTick(relativePos, relativeState.getBlock(), FLOW_RATE);
                         level.playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 1.0F, level.getRandom().nextFloat() * 0.1F + 0.9F);
-                        return ItemInteractionResult.sidedSuccess(level.isClientSide);
+                        return InteractionResult.sidedSuccess(level.isClientSide);
                     }
                 }
             }
         }
-        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        return InteractionResult.PASS;
     }
 
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {

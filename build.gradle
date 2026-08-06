@@ -1,7 +1,6 @@
 plugins {
     id "architectury-plugin" version "3.4-SNAPSHOT"
-    id "dev.architectury.loom" version "1.7-SNAPSHOT" apply false
-    id 'io.github.juuxel.loom-quiltflower' version '1.7.1' apply false
+    id "dev.architectury.loom" version "1.9-SNAPSHOT" apply false
     id "com.matthewprenger.cursegradle" version "1.4.0"
     id "com.modrinth.minotaur" version "2.+"
 }
@@ -33,7 +32,6 @@ static def listGameVersions(String string1, String string2) {
 
 subprojects {
     apply plugin: "dev.architectury.loom"
-    apply plugin: "io.github.juuxel.loom-quiltflower"
     apply plugin: "com.matthewprenger.cursegradle"
     apply plugin: "com.modrinth.minotaur"
 
@@ -64,9 +62,7 @@ subprojects {
             projectId = "oxide"
             uploadFile = tasks.remapJar
             gameVersions = versions
-            if (modLoader == "forge") {
-                loaders = ["neoforge"]
-            } else loaders = [modLoader]
+            loaders = [modLoader]
             changelog = changelogText
             versionNumber = modLoader +"_"+ mod_version
             versionType = release_type
@@ -95,9 +91,7 @@ subprojects {
                 }
 
 
-                if (modLoader == "neoforge") {
-                    addGameVersion("NeoForge")
-                } else addGameVersion modLoader.capitalize()
+                addGameVersion modLoader.capitalize()
 
                 mainArtifact(tasks.remapJar)
 
@@ -180,6 +174,9 @@ allprojects {
     }
 
     java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(rootProject.java_version.toInteger())
+        }
         withSourcesJar()
     }
 }
@@ -202,9 +199,11 @@ ext{
             mod_homepage         : mod_homepage,
             mod_github           : mod_github,
 
-            neo_version          : neo_version,
-            neo_version_range    : neo_version_range,
+            forge_version          : forge_version,
+            forge_version_range    : forge_version_range,
             loader_version_range : loader_version_range,
+            moonlight_version_range : moonlight_version_range,
+            moonlight_version : moonlight_version,
     ]
 }
 
@@ -212,8 +211,8 @@ ext{
 task buildAndPublishAll {
     dependsOn ':clean'
     dependsOn ':build'
-    dependsOn ':neoforge:curseforge'
-    dependsOn ':neoforge:modrinth'
+    dependsOn ':forge:curseforge'
+    dependsOn ':forge:modrinth'
     dependsOn ':fabric:curseforge'
     dependsOn ':fabric:modrinth'
 }

@@ -2,16 +2,16 @@ package com.ordana.oxide.items;
 
 import com.ordana.oxide.OxideClient;
 import com.ordana.oxide.entities.SprayParticleEntity;
-import com.ordana.oxide.reg.ModComponents;
+import com.ordana.oxide.reg.ModNBTKeys;
 import com.ordana.oxide.reg.ModTags;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.mehvahdjukaar.moonlight.api.fluids.SoftFluidStack;
-import net.mehvahdjukaar.moonlight.api.misc.FabricOverride;
+//import net.mehvahdjukaar.moonlight.api.misc.FabricOverride;
 import net.mehvahdjukaar.moonlight.api.misc.ForgeOverride;
 import net.mehvahdjukaar.moonlight.api.platform.PlatHelper;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -28,6 +28,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.FluidState;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -39,24 +40,37 @@ public class VarnishSprayer extends Item
         super(properties);
     }
 
+    // In 1.20.1 max_drops is stored in NBT, default is 128
     public static int getMaxCharges(ItemStack stack) {
-        return stack.getOrDefault(ModComponents.MAX_DROPS.get(), 0);
+        if (stack.hasTag() && stack.getTag().contains(ModNBTKeys.MAX_DROPS)) {
+            return stack.getTag().getInt(ModNBTKeys.MAX_DROPS);
+        }
+        return 128; // default
     }
 
-    //initialize if null
+    public static void setMaxCharges(ItemStack stack, int value) {
+        stack.getOrCreateTag().putInt(ModNBTKeys.MAX_DROPS, value);
+    }
+
     @NotNull
-    public static SFStackView getFluidComponent(ItemStack stack, HolderLookup.Provider reg) {
-        SFStackView f = stack.get(ModComponents.FLUID.get());
-        if (f == null) {
-            SFStackView view = SFStackView.of(SoftFluidStack.empty(reg));
-            stack.set(ModComponents.FLUID.get(), view);
-            f = view;
+    public static SFStackView getFluidComponent(ItemStack stack) {
+        CompoundTag tag = stack.getTag();
+        if (tag != null && tag.contains(ModNBTKeys.FLUID)) {
+            CompoundTag fluidTag = tag.getCompound(ModNBTKeys.FLUID);
+            if (!fluidTag.isEmpty()) {
+                return SFStackView.load(fluidTag);
+            }
         }
-        return f;
+        return SFStackView.of(SoftFluidStack.empty());
     }
 
     public static void setFluidComponent(ItemStack stack, SoftFluidStack fluid) {
-        stack.set(ModComponents.FLUID.get(), SFStackView.of(fluid));
+        SFStackView view = SFStackView.of(fluid);
+        if (view.isEmpty()) {
+            if (stack.hasTag()) stack.getTag().remove(ModNBTKeys.FLUID);
+        } else {
+            stack.getOrCreateTag().put(ModNBTKeys.FLUID, view.save());
+        }
     }
 
     //fill water
@@ -68,9 +82,9 @@ public class VarnishSprayer extends Item
 
         FluidState state = context.getLevel().getFluidState(pos);
         if (!state.isEmpty()) {
-            SoftFluidStack fluidThatBlockContains = SoftFluidStack.fromFluid(state, level.registryAccess());
+            SoftFluidStack fluidThatBlockContains = SoftFluidStack.fromFluid(state);
             if (!fluidThatBlockContains.isEmpty() && fluidThatBlockContains.is(ModTags.CAN_GO_IN_SPRAY)) {
-                var myFluid = getFluidComponent(stack, level.registryAccess());
+                var myFluid = getFluidComponent(stack);
                 boolean full = getMaxCharges(stack) <= myFluid.getCount();
                 if (!full) {
                     int bottles = fluidThatBlockContains.getCount();
@@ -88,7 +102,7 @@ public class VarnishSprayer extends Item
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack itemstack = player.getItemInHand(hand);
 
-        SFStackView fluid = getFluidComponent(itemstack, level.registryAccess());
+        SFStackView fluid = getFluidComponent(itemstack);
 
         if (!fluid.isEmpty()) {
             //TODO: play sound here
@@ -99,7 +113,7 @@ public class VarnishSprayer extends Item
     }
 
     @Override
-    public int getUseDuration(ItemStack stack, LivingEntity entity) {
+    public int getUseDuration(ItemStack stack) {
         return 72000; //arbitrary high value, we will stop using manually. same as bow. arm gets tired i guess
     }
 
@@ -108,10 +122,10 @@ public class VarnishSprayer extends Item
     public void onUseTick(Level level, LivingEntity livingEntity, ItemStack stack, int remainingUseDuration) {
         super.onUseTick(level, livingEntity, stack, remainingUseDuration);
 
-        if (remainingUseDuration > getUseDuration(stack, livingEntity) - 20) return;
+        if (remainingUseDuration > getUseDuration(stack) - 20) return;
         if (remainingUseDuration % 20 != 0) return;
 
-        SFStackView fluid = getFluidComponent(stack, level.registryAccess());
+        SFStackView fluid = getFluidComponent(stack);
         if (fluid.isEmpty()) {
             livingEntity.stopUsingItem();
             return;
@@ -143,45 +157,47 @@ public class VarnishSprayer extends Item
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
+    @Environment(EnvType.CLIENT)
+    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
+        super.appendHoverText(stack, level, tooltipComponents, tooltipFlag);
         if (PlatHelper.getPhysicalSide().isClient()) {
-            SFStackView fluid = getFluidComponent(stack, OxideClient.getClientLevel().registryAccess());
-            fluid.addToTooltip(context, tooltipComponents::add, tooltipFlag);
+            Level clientLevel = OxideClient.getClientLevel();
+            SFStackView fluid = getFluidComponent(stack);
+            fluid.addToTooltip(stack, clientLevel, tooltipComponents, tooltipFlag);
         }
     }
 
     @Environment(EnvType.CLIENT)
     @Override
     public boolean isBarVisible(ItemStack stack) {
-        SFStackView fluid = getFluidComponent(stack, OxideClient.getClientLevel().registryAccess());
+        SFStackView fluid = getFluidComponent(stack);
         return !fluid.isEmpty();
     }
 
     @Environment(EnvType.CLIENT)
     @Override
     public int getBarWidth(ItemStack stack) {
-        SFStackView fluid = getFluidComponent(stack, OxideClient.getClientLevel().registryAccess());
+        SFStackView fluid = getFluidComponent(stack);
         if (fluid.isEmpty()) return 0;
-        int getMaxCharges = getMaxCharges(stack);
-        return Math.round(((((float) getMaxCharges + fluid.getCount()) / getMaxCharges * 13f) - 13));
+        int maxCharges = getMaxCharges(stack);
+        return Math.round(((((float) maxCharges + fluid.getCount()) / maxCharges * 13f) - 13));
     }
 
     @Environment(EnvType.CLIENT)
     @Override
     public int getBarColor(ItemStack stack) {
-        Level clienntLevel = OxideClient.getClientLevel();
-        SFStackView fluid = getFluidComponent(stack, clienntLevel.registryAccess());
+        Level clientLevel = OxideClient.getClientLevel();
+        SFStackView fluid = getFluidComponent(stack);
         if (fluid.isEmpty()) return -1;
-        return fluid.getParticleColor(clienntLevel, BlockPos.ZERO);
+        return fluid.getParticleColor(clientLevel, BlockPos.ZERO);
     }
 
 
-    @FabricOverride
+    //@FabricOverride
     public boolean allowComponentsUpdateAnimation(Player player, InteractionHand hand, ItemStack oldStack, ItemStack newStack) {
-        SFStackView sf = oldStack.get(ModComponents.FLUID.get());
-        SFStackView sf2 = newStack.get(ModComponents.FLUID.get());
-        if (sf != null && sf2 != null) {
+        SFStackView sf = getFluidComponent(oldStack);
+        SFStackView sf2 = getFluidComponent(newStack);
+        if (!sf.isEmpty() && !sf2.isEmpty()) {
             if (sf.getFluid() == sf2.getFluid()) {
                 return sf.getCount() == sf2.getCount();
             }
@@ -192,9 +208,9 @@ public class VarnishSprayer extends Item
     @ForgeOverride
     public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
         if (slotChanged) return true;
-        SFStackView sf = oldStack.get(ModComponents.FLUID.get());
-        SFStackView sf2 = newStack.get(ModComponents.FLUID.get());
-        if (sf != null && sf2 != null) {
+        SFStackView sf = getFluidComponent(oldStack);
+        SFStackView sf2 = getFluidComponent(newStack);
+        if (!sf.isEmpty() && !sf2.isEmpty()) {
             if (sf.getFluid() == sf2.getFluid()) {
                 return sf.getCount() == sf2.getCount();
             }

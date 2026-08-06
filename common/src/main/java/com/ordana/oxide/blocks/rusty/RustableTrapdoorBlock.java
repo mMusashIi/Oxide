@@ -24,7 +24,7 @@ public class RustableTrapdoorBlock extends TrapDoorBlock implements Rustable {
     private final Rustable.RustLevel rustLevel;
 
     public RustableTrapdoorBlock(Rustable.RustLevel rustLevel, Properties properties) {
-        super(BlockSetType.IRON, Rustable.setRandomTicking(properties, rustLevel));
+        super(Rustable.setRandomTicking(properties, rustLevel), BlockSetType.IRON);
         this.rustLevel = rustLevel;
 
         this.registerDefaultState(this.defaultBlockState().setValue(VARNISHED, false).setValue(POWERED, false).setValue(OPEN, false));

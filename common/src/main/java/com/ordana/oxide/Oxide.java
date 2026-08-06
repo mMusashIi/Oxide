@@ -17,7 +17,7 @@ public class Oxide {
     public static final Logger LOGGER = LogManager.getLogger();
 
     public static ResourceLocation res(String name) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, name);
+        return new ResourceLocation(MOD_ID, name);
     }
 
     public static void commonInit() {
@@ -36,7 +36,7 @@ public class Oxide {
         ModBlocks.init();
         ModItems.init();
         ModEntities.init();
-        ModComponents.init();
+
         ModRecipes.init();
         ModDispenserBehaviors.init();
 

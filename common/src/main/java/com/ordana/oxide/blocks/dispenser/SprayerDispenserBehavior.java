@@ -7,7 +7,7 @@ import net.mehvahdjukaar.moonlight.api.fluids.SoftFluidStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Position;
-import net.minecraft.core.dispenser.BlockSource;
+import net.minecraft.core.BlockSource;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionResultHolder;
@@ -25,23 +25,23 @@ public class SprayerDispenserBehavior extends ProjectileBehavior {
 
     @Override
     protected Projectile getProjectileEntity(BlockSource source, Position position, ItemStack stack) {
-        var fluid = VarnishSprayer.getFluidComponent(stack, source.level().registryAccess());
-        SprayParticleEntity fluidDrop = new SprayParticleEntity(source.level(), position.x(), position.y(), position.z(), fluid);
+        var fluid = VarnishSprayer.getFluidComponent(stack);
+        SprayParticleEntity fluidDrop = new SprayParticleEntity(source.getLevel(), position.x(), position.y(), position.z(), fluid);
         return fluidDrop;
     }
 
 
     @Override
     protected InteractionResultHolder<ItemStack> customBehavior(BlockSource source, ItemStack stack) {
-        Level level = source.level();
+        Level level = source.getLevel();
         Position dispensePosition = DispenserBlock.getDispensePosition(source);
-        Direction direction = source.state().getValue(DispenserBlock.FACING);
-        BlockPos frontPos = source.pos().relative(direction);
+        Direction direction = source.getBlockState().getValue(DispenserBlock.FACING);
+        BlockPos frontPos = source.getPos().relative(direction);
         //this will make it so stuff can only shoot when no collision block is in front so we can run other behaviors too
         if (!level.getBlockState(frontPos).getCollisionShape(level, frontPos).isEmpty()) {
             return InteractionResultHolder.fail(stack);
         }
-        var fluid = VarnishSprayer.getFluidComponent(stack, source.level().registryAccess());
+        var fluid = VarnishSprayer.getFluidComponent(stack);
         if (fluid.getCount() == 0) return InteractionResultHolder.fail(stack);
 
         for (int y = -3; y < 3; ++y) {

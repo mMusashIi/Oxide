@@ -2,8 +2,8 @@ package com.ordana.oxide.configs;
 
 import com.ordana.oxide.Oxide;
 import net.mehvahdjukaar.moonlight.api.platform.configs.ConfigBuilder;
+import net.mehvahdjukaar.moonlight.api.platform.configs.ConfigSpec;
 import net.mehvahdjukaar.moonlight.api.platform.configs.ConfigType;
-import net.mehvahdjukaar.moonlight.api.platform.configs.ModConfigHolder;
 
 import java.lang.ref.WeakReference;
 import java.util.function.Supplier;
@@ -13,18 +13,19 @@ public class CommonConfigs {
     public static void init() {
     }
 
-    public static final ModConfigHolder CONFIG_HOLDER;
+    public static final ConfigSpec CONFIG_HOLDER;
     private static final WeakReference<ConfigBuilder> builderReference;
 
     static {
-        ConfigBuilder builder = ConfigBuilder.create(Oxide.MOD_ID, ConfigType.COMMON_SYNCED);
+        ConfigBuilder builder = ConfigBuilder.create(Oxide.MOD_ID, ConfigType.COMMON);
+        builder.setSynced();
 
         builderReference = new WeakReference<>(builder);
 
         General.init();
 
-        CONFIG_HOLDER = builder.build();
-        CONFIG_HOLDER.forceLoad();
+        CONFIG_HOLDER = builder.buildAndRegister();
+        CONFIG_HOLDER.loadFromFile();
     }
 
     public static class General {
@@ -51,6 +52,6 @@ public class CommonConfigs {
         public static final Supplier<Integer> RUST_RATE;
         public static final Supplier<Integer> CEMENT_FLOW_RATE;
         public static final Supplier<Integer> CEMENT_CURE_DELAY;
-        public static final Supplier<Float> FALLING_CEMENT_CRACK_CHANCE;
+        public static final Supplier<Double> FALLING_CEMENT_CRACK_CHANCE;
     }
 }
