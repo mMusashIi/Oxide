@@ -1,5 +1,7 @@
 package com.ordana.oxide.blocks.cement;
 
+import com.ordana.oxide.items.CementBucketItem;
+
 import com.ordana.oxide.configs.CommonConfigs;
 import com.ordana.oxide.entities.FallingCementEntity;
 import com.ordana.oxide.reg.ModBlockProperties;
@@ -45,7 +47,7 @@ public class CementBlock extends WeatherableBlock implements Fallable, Weatherab
     }
 
     public @NotNull ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
-        return new ItemStack(ModItems.CEMENT_BUCKET.get());
+        return CementBucketItem.create(128);
     }
 
     @Override

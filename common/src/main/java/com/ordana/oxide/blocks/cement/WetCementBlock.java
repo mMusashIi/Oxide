@@ -1,5 +1,7 @@
 package com.ordana.oxide.blocks.cement;
 
+import com.ordana.oxide.items.CementBucketItem;
+
 import com.ordana.oxide.configs.CommonConfigs;
 import com.ordana.oxide.reg.ModBlocks;
 import com.ordana.oxide.reg.ModItems;
@@ -51,7 +53,7 @@ public class WetCementBlock extends Block {
 
     public WetCementBlock(Properties properties) {
         super(properties);
-        this.defaultBlockState().setValue(TYPE, SlabType.BOTTOM).setValue(AGE, 0);
+        this.registerDefaultState(this.defaultBlockState().setValue(TYPE, SlabType.BOTTOM).setValue(AGE, 0));
     }
 
     public boolean useShapeForLightOcclusion(BlockState state) {
@@ -63,7 +65,7 @@ public class WetCementBlock extends Block {
     }
 
     public @NotNull ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
-        return new ItemStack(ModItems.CEMENT_BUCKET.get());
+        return CementBucketItem.create(128);
     }
 
     @Override
@@ -201,6 +203,8 @@ public class WetCementBlock extends Block {
                 level.setBlockAndUpdate(pos, state.setValue(TYPE, SlabType.BOTTOM));
                 level.setBlockAndUpdate(pos.below(), block.withPropertiesOf(belowState).setValue(TYPE, SlabType.BOTTOM));
                 level.playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 0.5f, 0.8f + random.nextFloat());
+                level.scheduleTick(pos.below(), block, FLOW_RATE);
+                level.scheduleTick(pos, this, FLOW_RATE);
                 return;
             }
             else {
@@ -225,6 +229,9 @@ public class WetCementBlock extends Block {
 
                 level.playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 0.5f, 0.8f + random.nextFloat());
                 level.scheduleTick(pos.below(), block, FLOW_RATE);
+                if (state.getValue(TYPE) == SlabType.DOUBLE) {
+                    level.scheduleTick(pos, this, FLOW_RATE);
+                }
                 return;
             }
         }
@@ -239,6 +246,7 @@ public class WetCementBlock extends Block {
                     level.setBlockAndUpdate(pos, state.setValue(TYPE, SlabType.BOTTOM));
                     level.playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 0.5f, 0.8f + random.nextFloat());
                     level.scheduleTick(pos.relative(dir), this, 8);
+                    level.scheduleTick(pos, this, FLOW_RATE);
 
                     break;
                 }
@@ -251,7 +259,7 @@ public class WetCementBlock extends Block {
                 var dirState = level.getBlockState(dirPos);
                 var adjState = level.getBlockState(pos.relative(dir));
 
-                if (adjState.isCollisionShapeFullBlock(level, pos.relative(dir))) continue;
+                if (adjState.isCollisionShapeFullBlock(level, pos.relative(dir))) break;
 
                 if (dirState.canBeReplaced() || dirState.is(ModBlocks.REBAR.get())) {
                     boolean bl = dirState.is(ModBlocks.REBAR.get());

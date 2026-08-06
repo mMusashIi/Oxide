@@ -55,8 +55,7 @@ public class CementedRebarBlock extends RebarBlock {
 
     public CementedRebarBlock(BlockBehaviour.Properties properties) {
         super(properties);
-        this.defaultBlockState().setValue(TYPE, SlabType.BOTTOM).setValue(AGE, 0);
-
+        this.registerDefaultState(this.defaultBlockState().setValue(TYPE, SlabType.BOTTOM).setValue(AGE, 0));
     }
 
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
@@ -166,7 +165,7 @@ public class CementedRebarBlock extends RebarBlock {
     public boolean canBeReplaced(BlockState state, BlockPlaceContext useContext) {
         ItemStack itemStack = useContext.getItemInHand();
         SlabType slabType = state.getValue(TYPE);
-        if (itemStack.is(ModItems.CEMENT_BUCKET.get())) {
+        if (slabType != SlabType.DOUBLE && itemStack.is(ModItems.CEMENT_BUCKET.get())) {
             if (useContext.replacingClickedOnBlock()) {
                 boolean bl = useContext.getClickLocation().y - (double)useContext.getClickedPos().getY() > 0.5;
                 Direction direction = useContext.getClickedFace();
@@ -202,6 +201,8 @@ public class CementedRebarBlock extends RebarBlock {
                 level.setBlockAndUpdate(pos, state.setValue(TYPE, SlabType.BOTTOM));
                 level.setBlockAndUpdate(pos.below(), block.withPropertiesOf(belowState).setValue(TYPE, SlabType.BOTTOM));
                 level.playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 0.5f, 0.8f + random.nextFloat());
+                level.scheduleTick(pos.below(), block, FLOW_RATE);
+                level.scheduleTick(pos, this, FLOW_RATE);
                 return;
             }
             else {
@@ -225,6 +226,10 @@ public class CementedRebarBlock extends RebarBlock {
                 level.setBlockAndUpdate(pos.below(), block.withPropertiesOf(belowState).setValue(TYPE, SlabType.DOUBLE));
                 level.playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 0.5f, 0.8f + random.nextFloat());
                 level.scheduleTick(pos.below(), block, FLOW_RATE);
+                
+                if (state.getValue(TYPE) == SlabType.DOUBLE) {
+                    level.scheduleTick(pos, this, FLOW_RATE);
+                }
                 return;
             }
         }
@@ -241,6 +246,7 @@ public class CementedRebarBlock extends RebarBlock {
 
                     level.playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 0.5f, 0.8f + random.nextFloat());
                     level.scheduleTick(pos.relative(dir), block, FLOW_RATE);
+                    level.scheduleTick(pos, this, FLOW_RATE);
 
                     break;
                 }
@@ -259,12 +265,12 @@ public class CementedRebarBlock extends RebarBlock {
                     boolean bl = dirState.is(ModBlocks.REBAR.get());
                     var block = bl ? ModBlocks.CEMENTED_REBAR.get() : ModBlocks.WET_CEMENT.get();
 
-                        level.setBlockAndUpdate(pos, ModBlocks.REBAR.get().withPropertiesOf(state));
-                        level.setBlockAndUpdate(dirPos, block.withPropertiesOf(state).setValue(TYPE, SlabType.BOTTOM));
+                    level.setBlockAndUpdate(pos, ModBlocks.REBAR.get().withPropertiesOf(state));
+                    level.setBlockAndUpdate(dirPos, block.withPropertiesOf(state).setValue(TYPE, SlabType.BOTTOM));
 
-                        level.playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 0.5f, 0.8f + random.nextFloat());
-                        level.scheduleTick(dirPos, block, FLOW_RATE);
-                        break;
+                    level.playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 0.5f, 0.8f + random.nextFloat());
+                    level.scheduleTick(dirPos, block, FLOW_RATE);
+                    return;
 
                 }
                 if (dirState.is(ModTags.WET_CEMENT)) {
@@ -277,12 +283,13 @@ public class CementedRebarBlock extends RebarBlock {
 
                         level.playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 0.5f, 0.8f + random.nextFloat());
                         level.scheduleTick(dirPos, block, FLOW_RATE);
-                        break;
+                        return;
                     }
                 }
             }
         }
     }
+
 
 
     static {
