@@ -86,7 +86,7 @@ subprojects {
                 id = project_id
                 changelog = changelogText
                 releaseType = release_type
-                for (var ver : versions){
+                for (def ver : versions){
                     addGameVersion ver
                 }
 
