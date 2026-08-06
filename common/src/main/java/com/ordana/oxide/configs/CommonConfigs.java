@@ -38,7 +38,7 @@ public class CommonConfigs {
             builder.comment("General settings")
                     .push("general");
 
-            CREATIVE_TAB = builder.comment("Enable Creative Tab").define("creative_tab", false);
+            CREATIVE_TAB = builder.comment("Enable Creative Tab").define("creative_tab", true);
 
             RUST_RATE = builder.comment("Enable Creative Tab").define("rusting_rate", 75, 0, 100);
             CEMENT_FLOW_RATE = builder.comment("Rate at which Wet Cement flows").define("cement_flow_rate", 8, 1, 32);

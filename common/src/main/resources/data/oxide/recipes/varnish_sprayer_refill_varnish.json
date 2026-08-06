@@ -1,0 +1,8 @@
+{
+  "type": "oxide:charge_sprayer",
+  "ingredient": {
+    "item": "minecraft:honeycomb_block"
+  },
+  "charges_per_item": 128,
+  "can_overfill": false
+}

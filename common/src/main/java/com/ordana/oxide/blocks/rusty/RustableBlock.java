@@ -41,7 +41,8 @@ public class RustableBlock extends Block implements Rustable {
     }
 
     public InteractionResult use( BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        return ((Rustable) this).use(state, level, pos, player, hand, hitResult);
+        InteractionResult _result = Rustable.super.use(state, level, pos, player, hand, hitResult);
+        return _result != InteractionResult.PASS ? _result : super.use(state, level, pos, player, hand, hitResult);
     }
 
     public void playerDestroy(Level level, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity, ItemStack tool) {

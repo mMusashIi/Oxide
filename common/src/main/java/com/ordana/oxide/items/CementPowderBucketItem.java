@@ -36,7 +36,7 @@ public class CementPowderBucketItem extends Item {
             if (level.mayInteract(player, blockPos) && player.mayUseItemAt(blockPos2, direction, itemStack)) {
                 BlockState blockState = level.getBlockState(blockPos);
                 if (blockState.getFluidState().is(Fluids.WATER)) {
-                    player.setItemSlot(player.getEquipmentSlotForItem(itemStack), ModItems.CEMENT_BUCKET.get().getDefaultInstance());
+                    player.setItemSlot(player.getEquipmentSlotForItem(itemStack), CementBucketItem.create(128));
                     level.playSound(player, BlockPos.containing(player.position()), SoundEvents.BUCKET_FILL, SoundSource.BLOCKS, 1F, 1.5F + (level.random.nextFloat() * 0.5F));
                 }
             }

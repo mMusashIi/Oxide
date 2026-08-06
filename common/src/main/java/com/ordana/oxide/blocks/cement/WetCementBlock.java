@@ -156,6 +156,14 @@ public class WetCementBlock extends Block {
         }
     }
 
+    @Override
+    public void onPlace(BlockState pState, Level pLevel, BlockPos pPos, BlockState pOldState, boolean pIsMoving) {
+        if (!pOldState.is(pState.getBlock())) {
+            pLevel.scheduleTick(pPos, this, FLOW_RATE);
+        }
+        super.onPlace(pState, pLevel, pPos, pOldState, pIsMoving);
+    }
+
     public boolean canBeReplaced(BlockState state, BlockPlaceContext useContext) {
         ItemStack itemStack = useContext.getItemInHand();
         SlabType slabType = state.getValue(TYPE);
@@ -243,7 +251,7 @@ public class WetCementBlock extends Block {
                 var dirState = level.getBlockState(dirPos);
                 var adjState = level.getBlockState(pos.relative(dir));
 
-                if (adjState.isCollisionShapeFullBlock(level, pos.relative(dir))) break;
+                if (adjState.isCollisionShapeFullBlock(level, pos.relative(dir))) continue;
 
                 if (dirState.canBeReplaced() || dirState.is(ModBlocks.REBAR.get())) {
                     boolean bl = dirState.is(ModBlocks.REBAR.get());

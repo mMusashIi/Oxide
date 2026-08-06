@@ -9,6 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.ItemLike;
+import com.ordana.oxide.items.CementBucketItem;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -105,30 +106,51 @@ public class ModCreativeTab {
                 ModBlocks.HEAVY_IRON_CHAIN
         );
 
-        after(e, Items.IRON_TRAPDOOR, CreativeModeTabs.BUILDING_BLOCKS,
-                ModItems.RUSTY_NAIL, ModItems.VARNISH_SPRAYER,
-
-                ModItems.CEMENT_POWDER_BUCKET, ModItems.CEMENT_BUCKET, ModBlocks.REBAR,
-                ModBlocks.CEMENT, ModBlocks.CEMENT_SLAB,
-                ModBlocks.WEATHERED_CEMENT, ModBlocks.WEATHERED_CEMENT_SLAB,
-                ModBlocks.CRACKED_CEMENT, ModBlocks.CRACKED_CEMENT_SLAB,
-                ModBlocks.CRACKED_WEATHERED_CEMENT, ModBlocks.CRACKED_WEATHERED_CEMENT_SLAB,
-
-                ModBlocks.REINFORCED_CEMENT,
-                ModBlocks.WEATHERED_REINFORCED_CEMENT,
-                ModBlocks.CRACKED_REINFORCED_CEMENT,
-                ModBlocks.CRACKED_WEATHERED_REINFORCED_CEMENT,
-
-                ModBlocks.CEMENT_BLOCK, ModBlocks.CEMENT_BLOCK_SLAB,
-                ModBlocks.WEATHERED_CEMENT_BLOCK, ModBlocks.WEATHERED_CEMENT_BLOCK_SLAB,
-
-                ModBlocks.CINDER_BLOCKS, ModBlocks.CINDER_BLOCK_SLAB, ModBlocks.CINDER_BLOCK,
-                ModBlocks.CINDER_BRICKS, ModBlocks.CINDER_BRICK_SLAB, ModBlocks.CINDER_BRICK_STAIRS, ModBlocks.CINDER_BRICK_WALL,
-                ModBlocks.WEATHERED_CINDER_BRICKS, ModBlocks.WEATHERED_CINDER_BRICK_SLAB, ModBlocks.WEATHERED_CINDER_BRICK_STAIRS, ModBlocks.WEATHERED_CINDER_BRICK_WALL,
-                ModBlocks.CLINKER_BRICKS, ModBlocks.CLINKER_BRICK_SLAB, ModBlocks.CLINKER_BRICK_STAIRS, ModBlocks.CLINKER_BRICK_WALL,
-                ModBlocks.STOCK_BRICKS, ModBlocks.STOCK_BRICK_SLAB, ModBlocks.STOCK_BRICK_STAIRS, ModBlocks.STOCK_BRICK_WALL,
-                ModBlocks.CREAM_BRICKS, ModBlocks.CREAM_BRICK_SLAB, ModBlocks.CREAM_BRICK_STAIRS, ModBlocks.CREAM_BRICK_WALL
-
+        afterStacks(e, Items.IRON_TRAPDOOR, CreativeModeTabs.BUILDING_BLOCKS,
+                ModItems.RUSTY_NAIL.get().getDefaultInstance(),
+                ModItems.VARNISH_SPRAYER.get().getDefaultInstance(),
+                ModItems.CEMENT_POWDER_BUCKET.get().getDefaultInstance(),
+                CementBucketItem.create(128),
+                ModBlocks.REBAR.get().asItem().getDefaultInstance(),
+                ModBlocks.CEMENT.get().asItem().getDefaultInstance(),
+                ModBlocks.CEMENT_SLAB.get().asItem().getDefaultInstance(),
+                ModBlocks.WEATHERED_CEMENT.get().asItem().getDefaultInstance(),
+                ModBlocks.WEATHERED_CEMENT_SLAB.get().asItem().getDefaultInstance(),
+                ModBlocks.CRACKED_CEMENT.get().asItem().getDefaultInstance(),
+                ModBlocks.CRACKED_CEMENT_SLAB.get().asItem().getDefaultInstance(),
+                ModBlocks.CRACKED_WEATHERED_CEMENT.get().asItem().getDefaultInstance(),
+                ModBlocks.CRACKED_WEATHERED_CEMENT_SLAB.get().asItem().getDefaultInstance(),
+                ModBlocks.REINFORCED_CEMENT.get().asItem().getDefaultInstance(),
+                ModBlocks.WEATHERED_REINFORCED_CEMENT.get().asItem().getDefaultInstance(),
+                ModBlocks.CRACKED_REINFORCED_CEMENT.get().asItem().getDefaultInstance(),
+                ModBlocks.CRACKED_WEATHERED_REINFORCED_CEMENT.get().asItem().getDefaultInstance(),
+                ModBlocks.CEMENT_BLOCK.get().asItem().getDefaultInstance(),
+                ModBlocks.CEMENT_BLOCK_SLAB.get().asItem().getDefaultInstance(),
+                ModBlocks.WEATHERED_CEMENT_BLOCK.get().asItem().getDefaultInstance(),
+                ModBlocks.WEATHERED_CEMENT_BLOCK_SLAB.get().asItem().getDefaultInstance(),
+                ModBlocks.CINDER_BLOCKS.get().asItem().getDefaultInstance(),
+                ModBlocks.CINDER_BLOCK_SLAB.get().asItem().getDefaultInstance(),
+                ModBlocks.CINDER_BLOCK.get().asItem().getDefaultInstance(),
+                ModBlocks.CINDER_BRICKS.get().asItem().getDefaultInstance(),
+                ModBlocks.CINDER_BRICK_SLAB.get().asItem().getDefaultInstance(),
+                ModBlocks.CINDER_BRICK_STAIRS.get().asItem().getDefaultInstance(),
+                ModBlocks.CINDER_BRICK_WALL.get().asItem().getDefaultInstance(),
+                ModBlocks.WEATHERED_CINDER_BRICKS.get().asItem().getDefaultInstance(),
+                ModBlocks.WEATHERED_CINDER_BRICK_SLAB.get().asItem().getDefaultInstance(),
+                ModBlocks.WEATHERED_CINDER_BRICK_STAIRS.get().asItem().getDefaultInstance(),
+                ModBlocks.WEATHERED_CINDER_BRICK_WALL.get().asItem().getDefaultInstance(),
+                ModBlocks.CLINKER_BRICKS.get().asItem().getDefaultInstance(),
+                ModBlocks.CLINKER_BRICK_SLAB.get().asItem().getDefaultInstance(),
+                ModBlocks.CLINKER_BRICK_STAIRS.get().asItem().getDefaultInstance(),
+                ModBlocks.CLINKER_BRICK_WALL.get().asItem().getDefaultInstance(),
+                ModBlocks.STOCK_BRICKS.get().asItem().getDefaultInstance(),
+                ModBlocks.STOCK_BRICK_SLAB.get().asItem().getDefaultInstance(),
+                ModBlocks.STOCK_BRICK_STAIRS.get().asItem().getDefaultInstance(),
+                ModBlocks.STOCK_BRICK_WALL.get().asItem().getDefaultInstance(),
+                ModBlocks.CREAM_BRICKS.get().asItem().getDefaultInstance(),
+                ModBlocks.CREAM_BRICK_SLAB.get().asItem().getDefaultInstance(),
+                ModBlocks.CREAM_BRICK_STAIRS.get().asItem().getDefaultInstance(),
+                ModBlocks.CREAM_BRICK_WALL.get().asItem().getDefaultInstance()
         );
 
 
@@ -160,13 +182,19 @@ public class ModCreativeTab {
 
     private static void after(RegHelper.ItemToTabEvent event, Predicate<ItemStack> targetPred,
                               ResourceKey<CreativeModeTab> tab, Supplier<?>... items) {
-
-        if (items[0].get() instanceof ItemStack) {
+        if (items.length == 0) return;
+        Object first = items[0].get();
+        if (first instanceof ItemStack) {
             ItemStack[] entries = Arrays.stream(items).map(s -> (ItemStack) s.get()).toArray(ItemStack[]::new);
             event.addAfter(tab, targetPred, entries);
         } else {
-            ItemLike[] entries = Arrays.stream(items).map((s -> (ItemLike) (s.get()))).toArray(ItemLike[]::new);
+            ItemLike[] entries = Arrays.stream(items).map(s -> (ItemLike) s.get()).toArray(ItemLike[]::new);
             event.addAfter(tab, targetPred, entries);
         }
+    }
+
+    private static void afterStacks(RegHelper.ItemToTabEvent event, Item target,
+                                    ResourceKey<CreativeModeTab> tab, ItemStack... stacks) {
+        event.addAfter(tab, i -> i.is(target), stacks);
     }
 }

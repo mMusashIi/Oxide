@@ -53,7 +53,8 @@ public class RustableSlabBlock extends SlabBlock implements Rustable {
     }
 
     public InteractionResult use( BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        return ((Rustable) this).use(state, level, pos, player, hand, hitResult);
+        InteractionResult _result = Rustable.super.use(state, level, pos, player, hand, hitResult);
+        return _result != InteractionResult.PASS ? _result : super.use(state, level, pos, player, hand, hitResult);
     }
 
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {

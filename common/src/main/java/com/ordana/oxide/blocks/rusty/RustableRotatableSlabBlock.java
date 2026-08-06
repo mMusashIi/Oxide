@@ -56,7 +56,5 @@ public class RustableRotatableSlabBlock extends RustableSlabBlock {
         return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
     }
 
-    public InteractionResult use( BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        return ((Rustable) this).use(state, level, pos, player, hand, hitResult);
-    }
+
 }

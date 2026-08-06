@@ -120,6 +120,7 @@ public class RustableScaffoldBlock extends Block implements Rustable, SimpleWate
     }
 
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        return ((Rustable) this).use(state, level, pos, player, hand, hitResult);
+        InteractionResult _result = Rustable.super.use(state, level, pos, player, hand, hitResult);
+        return _result != InteractionResult.PASS ? _result : super.use(state, level, pos, player, hand, hitResult);
     }
 }

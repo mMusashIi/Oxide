@@ -1,6 +1,7 @@
 package com.ordana.oxide.items;
 
 import com.ordana.oxide.reg.ModBlocks;
+import com.ordana.oxide.reg.ModItems;
 import com.ordana.oxide.reg.ModNBTKeys;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -46,6 +47,12 @@ public class CementBucketItem extends Item {
 
     public int getAmount(ItemStack stack) {
         return stack.hasTag() ? stack.getTag().getInt(ModNBTKeys.CEMENT) : 0;
+    }
+
+    public static ItemStack create(int amount) {
+        ItemStack stack = new ItemStack(ModItems.CEMENT_BUCKET.get());
+        stack.getOrCreateTag().putInt(ModNBTKeys.CEMENT, amount);
+        return stack;
     }
 
 
@@ -107,8 +114,6 @@ public class CementBucketItem extends Item {
                                 player.setItemInHand(context.getHand(), Items.BUCKET.getDefaultInstance());
                             }
                         }
-
-                        context.getLevel().scheduleTick(context.getClickedPos(), blockState.getBlock(), 8);
                     }
 
                     return InteractionResult.sidedSuccess(level.isClientSide);

@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "oxide:black_corrugated_iron"
+  },
+  "result": {
+    "item": "oxide:black_corrugated_iron_stairs"
+  }
+}
