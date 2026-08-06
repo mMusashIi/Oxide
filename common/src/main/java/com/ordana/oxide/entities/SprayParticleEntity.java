@@ -58,19 +58,19 @@ public class SprayParticleEntity extends ImprovedProjectileEntity {
 
     public SprayParticleEntity(Level level, LivingEntity shooter, SFStackView fluid) {
         super(ModEntities.SPRAY_ENTITY.get(), shooter, level);
-        this.maxAge = ((level.dimensionType().ultraWarm() && fluid.toMutable().is(BuiltInSoftFluids.WATER)) ? 7 : 300);
+        this.maxAge = ((level.dimensionType().ultraWarm() && fluid.is(BuiltInSoftFluids.WATER)) ? 7 : 300);
         this.setDataFluid(fluid);
     }
 
     public SprayParticleEntity(Level level, SFStackView fluid) {
         super(ModEntities.SPRAY_ENTITY.get(), level);
-        this.maxAge = ((level.dimensionType().ultraWarm() && fluid.toMutable().is(BuiltInSoftFluids.WATER)) ? 7 : 300);
+        this.maxAge = ((level.dimensionType().ultraWarm() && fluid.is(BuiltInSoftFluids.WATER)) ? 7 : 300);
         this.setDataFluid(fluid);
     }
 
     public SprayParticleEntity(Level level, double x, double y, double z, SFStackView fluid) {
         super(ModEntities.SPRAY_ENTITY.get(), x, y, z, level);
-        this.maxAge = ((level.dimensionType().ultraWarm() && fluid.toMutable().is(BuiltInSoftFluids.WATER)) ? 7 : 300);
+        this.maxAge = ((level.dimensionType().ultraWarm() && fluid.is(BuiltInSoftFluids.WATER)) ? 7 : 300);
         this.setDataFluid(fluid);
     }
 
@@ -171,7 +171,7 @@ public class SprayParticleEntity extends ImprovedProjectileEntity {
         BlockState state = this.level().getBlockState(pos);
 
 
-        if (getDataFluid().toMutable().is(BuiltInSoftFluids.LAVA)) {
+        if (getDataFluid().is(BuiltInSoftFluids.LAVA)) {
             placeFire(this.level(), hit);
             if (random.nextFloat() > 0.75) level().playSound(null, pos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 0.5f, 0.8f + random.nextFloat());
         }
@@ -181,7 +181,7 @@ public class SprayParticleEntity extends ImprovedProjectileEntity {
             if (random.nextFloat() > 0.75) level().playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 0.5f, 0.8f + random.nextFloat());
         }
 
-        if (getDataFluid().toMutable().is(BuiltInSoftFluids.WATER)) {
+        if (getDataFluid().is(BuiltInSoftFluids.WATER)) {
             var relPos = pos.relative(hit.getDirection());
             var relState = level().getBlockState(relPos);
             if (relState.is(ModTags.WATER_DESTROYS)) level().destroyBlock(relPos, false);
@@ -245,9 +245,9 @@ public class SprayParticleEntity extends ImprovedProjectileEntity {
             }
             if (entity instanceof Sheep sheep) sheep.setColor(getDye(getDataFluid().getFluid()));
         }
-        if (getDataFluid().toMutable().is(BuiltInSoftFluids.WATER)) if (entity instanceof Blaze) entity.hurt(this.damageSources().thrown(this, this.getOwner()), (float) 3);
-        if (getDataFluid().toMutable().is(BuiltInSoftFluids.LAVA)) if (!entity.fireImmune()) entity.lavaHurt();
-        if (getDataFluid().toMutable().is(BuiltInSoftFluids.MILK)) if (entity instanceof LivingEntity livingEntity) livingEntity.removeAllEffects();
+        if (getDataFluid().is(BuiltInSoftFluids.WATER)) if (entity instanceof Blaze) entity.hurt(this.damageSources().thrown(this, this.getOwner()), (float) 3);
+        if (getDataFluid().is(BuiltInSoftFluids.LAVA)) if (!entity.fireImmune()) entity.lavaHurt();
+        if (getDataFluid().is(BuiltInSoftFluids.MILK)) if (entity instanceof LivingEntity livingEntity) livingEntity.removeAllEffects();
         if (getDataFluid().is(ModTags.VARNISH)) if (entity instanceof LivingEntity livingEntity) livingEntity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 1, true, false, true));
     }
 

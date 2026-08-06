@@ -60,6 +60,10 @@ public class SFStackView {
         return this.fluid.is(tag);
     }
 
+    public boolean is(net.minecraft.core.Holder<SoftFluid> holder) {
+        return this.fluid.is(holder);
+    }
+
     public boolean sameFluidSameComponents(SoftFluidStack stack){
         return this.fluid.isFluidEqual(stack);
     }

@@ -194,7 +194,7 @@ public class VarnishSprayer extends Item
 
 
     //@FabricOverride
-    public boolean allowComponentsUpdateAnimation(Player player, InteractionHand hand, ItemStack oldStack, ItemStack newStack) {
+    public boolean allowNbtUpdateAnimation(Player player, InteractionHand hand, ItemStack oldStack, ItemStack newStack) {
         SFStackView sf = getFluidComponent(oldStack);
         SFStackView sf2 = getFluidComponent(newStack);
         if (!sf.isEmpty() && !sf2.isEmpty()) {
