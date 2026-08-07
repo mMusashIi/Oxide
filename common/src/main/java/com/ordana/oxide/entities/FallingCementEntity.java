@@ -51,7 +51,20 @@ public class FallingCementEntity extends ImprovedFallingBlockEntity implements F
         var relativeState = this.level().getBlockState(blockPos);
         boolean bl = this.blockState.getBlock() instanceof CementSlabBlock;
         boolean bl2 = this.blockState.getBlock() instanceof CementBlock;
-        boolean bl3 = (bl||bl2) && relativeState.getBlock() instanceof CementSlabBlock;
+        boolean blWet = this.blockState.is(ModTags.WET_CEMENT);
+        boolean bl3 = (bl || bl2) && relativeState.getBlock() instanceof CementSlabBlock;
+        boolean bl4 = blWet && relativeState.is(ModTags.WET_CEMENT)
+                && relativeState.hasProperty(BlockStateProperties.SLAB_TYPE)
+                && relativeState.getValue(BlockStateProperties.SLAB_TYPE) == SlabType.BOTTOM;
+
+        if (bl4) {
+            // Wet cement landing on an existing BOTTOM wet cement slab → merge to DOUBLE
+            level().setBlockAndUpdate(blockPos, relativeState.setValue(BlockStateProperties.SLAB_TYPE, SlabType.DOUBLE));
+            level().playSound(null, blockPos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 0.5F, level().getRandom().nextFloat() * 0.1F + 0.9F);
+            this.discard();
+            return;
+        }
+
         if (bl3) {
             boolean weathered = this.blockState.is(ModTags.WEATHERED_CEMENT);
             var state = weathered ?
