@@ -249,6 +249,16 @@ public class WetCementBlock extends Block {
                     level.scheduleTick(pos, this, FLOW_RATE);
 
                     break;
+                } else if (dirState.is(ModTags.WET_CEMENT) && dirState.getValue(TYPE) == SlabType.BOTTOM) {
+                    boolean isRebar = dirState.is(ModBlocks.CEMENTED_REBAR.get());
+                    var block = isRebar ? ModBlocks.CEMENTED_REBAR.get() : ModBlocks.WET_CEMENT.get();
+                    level.setBlockAndUpdate(pos.relative(dir), block.withPropertiesOf(dirState).setValue(TYPE, SlabType.DOUBLE));
+                    level.setBlockAndUpdate(pos, state.setValue(TYPE, SlabType.BOTTOM));
+                    level.playSound(null, pos, SoundEvents.MUD_PLACE, SoundSource.BLOCKS, 0.5f, 0.8f + random.nextFloat());
+                    level.scheduleTick(pos.relative(dir), block, FLOW_RATE);
+                    level.scheduleTick(pos, this, FLOW_RATE);
+
+                    break;
                 }
             }
         }
@@ -259,7 +269,7 @@ public class WetCementBlock extends Block {
                 var dirState = level.getBlockState(dirPos);
                 var adjState = level.getBlockState(pos.relative(dir));
 
-                if (adjState.isCollisionShapeFullBlock(level, pos.relative(dir))) break;
+                if (adjState.isCollisionShapeFullBlock(level, pos.relative(dir))) continue;
 
                 if (dirState.canBeReplaced() || dirState.is(ModBlocks.REBAR.get())) {
                     boolean bl = dirState.is(ModBlocks.REBAR.get());
