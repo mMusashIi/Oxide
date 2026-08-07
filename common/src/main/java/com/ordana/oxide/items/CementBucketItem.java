@@ -8,37 +8,31 @@ import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.phys.shapes.CollisionContext;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class CementBucketItem extends Item {
+
+public class CementBucketItem extends BlockItem {
 
     public CementBucketItem(Properties properties) {
-        super(properties);
+        super(ModBlocks.WET_CEMENT.get(), properties);
     }
 
     public void setAmount(ItemStack stack, int amount) {
@@ -62,6 +56,7 @@ public class CementBucketItem extends Item {
         tooltip.add(Component.translatable("tooltip.oxide.cement_bucket", getAmount(stack), "128").setStyle(Style.EMPTY.applyFormat(ChatFormatting.GRAY)));
     }
 
+    @Override
     public InteractionResult useOn(UseOnContext context) {
         InteractionResult interactionResult = this.place(new BlockPlaceContext(context));
         if (!interactionResult.consumesAction() && context.getItemInHand().getItem().isEdible()) {
@@ -72,6 +67,7 @@ public class CementBucketItem extends Item {
         }
     }
 
+    @Override
     public InteractionResult place(BlockPlaceContext context) {
         if (!this.getBlock().isEnabled(context.getLevel().enabledFeatures())) {
             return InteractionResult.FAIL;
@@ -94,11 +90,10 @@ public class CementBucketItem extends Item {
                     ItemStack itemStack = blockPlaceContext.getItemInHand();
                     BlockState blockState2 = level.getBlockState(blockPos);
                     if (blockState2.is(blockState.getBlock())) {
-                        blockState2 = this.updateBlockStateFromTag(blockPos, level, itemStack, blockState2);
-                        this.updateCustomBlockEntityTag(blockPos, level, player, itemStack, blockState2);
+                        updateCustomBlockEntityTag(level, player, blockPos, itemStack);
                         blockState2.getBlock().setPlacedBy(level, blockPos, blockState2, player, itemStack);
                         if (player instanceof ServerPlayer) {
-                            CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayer)player, blockPos, itemStack);
+                            CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayer) player, blockPos, itemStack);
                         }
                     }
 
@@ -122,75 +117,13 @@ public class CementBucketItem extends Item {
         }
     }
 
-    protected SoundEvent getPlaceSound(BlockState state) {
-        return state.getSoundType().getPlaceSound();
-    }
-
-    @Nullable
-    public BlockPlaceContext updatePlacementContext(BlockPlaceContext context) {
-        return context;
-    }
-
-
-
-    protected boolean updateCustomBlockEntityTag(BlockPos pos, Level level, @Nullable Player player, ItemStack stack, BlockState state) {
-        return updateCustomBlockEntityTag(level, player, pos, stack);
-    }
-
+    @Override
     @Nullable
     protected BlockState getPlacementState(BlockPlaceContext context) {
         var state = context.getLevel().getBlockState(context.getClickedPos());
-        BlockState blockState = state.is(
-                ModBlocks.REBAR.get()) ? ModBlocks.CEMENTED_REBAR.get().getStateForPlacement(context) :
-                this.getBlock().getStateForPlacement(context);
+        BlockState blockState = state.is(ModBlocks.REBAR.get())
+                ? ModBlocks.CEMENTED_REBAR.get().getStateForPlacement(context)
+                : this.getBlock().getStateForPlacement(context);
         return blockState != null && this.canPlace(context, blockState) ? blockState : null;
-    }
-
-    private BlockState updateBlockStateFromTag(BlockPos pos, Level level, ItemStack stack, BlockState state) {
-        return state;
-    }
-
-    protected boolean canPlace(BlockPlaceContext context, BlockState state) {
-        Player player = context.getPlayer();
-        CollisionContext collisionContext = player == null ? CollisionContext.empty() : CollisionContext.of(player);
-        return (!this.mustSurvive() || state.canSurvive(context.getLevel(), context.getClickedPos())) && context.getLevel().isUnobstructed(state, context.getClickedPos(), collisionContext);
-    }
-
-    protected boolean mustSurvive() {
-        return true;
-    }
-
-    protected boolean placeBlock(BlockPlaceContext context, BlockState state) {
-        return context.getLevel().setBlock(context.getClickedPos(), state, 11);
-    }
-
-    public static boolean updateCustomBlockEntityTag(Level level, @Nullable Player player, BlockPos pos, ItemStack stack) {
-        MinecraftServer minecraftserver = level.getServer();
-        if (minecraftserver == null) {
-            return false;
-        } else {
-            CompoundTag compoundtag = BlockItem.getBlockEntityData(stack);
-            if (compoundtag != null) {
-                BlockEntity blockentity = level.getBlockEntity(pos);
-                if (blockentity != null) {
-                    if (!level.isClientSide && blockentity.onlyOpCanSetNbt() && (player == null || !player.canUseGameMasterBlocks())) {
-                        return false;
-                    }
-                    CompoundTag compoundtag1 = blockentity.saveWithoutMetadata();
-                    CompoundTag compoundtag2 = compoundtag1.copy();
-                    compoundtag1.merge(compoundtag);
-                    if (!compoundtag1.equals(compoundtag2)) {
-                        blockentity.load(compoundtag1);
-                        blockentity.setChanged();
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-    }
-
-    public Block getBlock() {
-        return ModBlocks.WET_CEMENT.get();
     }
 }
